@@ -18,19 +18,12 @@ android {
     signingConfigs {
         create("release") {
             val storeFileProp = project.findProperty("storeFile") as String?
-            val storePasswordProp = project.findProperty("storePassword") as String?
-            val keyAliasProp = project.findProperty("keyAlias") as String?
-            val keyPasswordProp = project.findProperty("keyPassword") as String?
-            if (storeFileProp != null) {
-                storeFile = file(storeFileProp)
-                storePassword = storePasswordProp ?: ""
-                keyAlias = keyAliasProp ?: ""
-                keyPassword = keyPasswordProp ?: ""
-            } else {
-                storeFile = file("dummy.keystore")
-                storePassword = "dummy"
-                keyAlias = "dummy"
-                keyPassword = "dummy"
+            val ksFile = storeFileProp?.let { file(it) }
+            if (ksFile != null && ksFile.exists()) {
+                storeFile = ksFile
+                storePassword = (project.findProperty("storePassword") as String?) ?: ""
+                keyAlias = (project.findProperty("keyAlias") as String?) ?: ""
+                keyPassword = (project.findProperty("keyPassword") as String?) ?: ""
             }
         }
     }
@@ -66,6 +59,16 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+}
+
+tasks.whenTaskAdded {
+    if (name.startsWith("assembleRelease") || name.startsWith("bundleRelease")) {
+        doFirst {
+            if (android.signingConfigs.getByName("release").storeFile == null) {
+                throw GradleException("Release keystore not configured: set storeFile/storePassword/keyAlias/keyPassword in gradle.properties")
+            }
+        }
     }
 }
 

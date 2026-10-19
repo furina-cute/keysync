@@ -475,7 +475,14 @@ class EventHandler(
     private val pointerIds = IntArray(512) { -1 }
 
     private var wasdMask = 0
+    @Volatile private var wasdMaskVolatile = 0
     private var lastWasdMask = 0
+    private val wasdLock = Any()
+    private var wasdHandling = false
+    
+    // Debounce for rapid key changes
+    private var lastWasdChangeTime = 0L
+    private val wasdDebounceMs = 16L // ~1 frame at 60fps
 
     private val keyIdMap = HashMap<Int, Int>(64)
     private var nextKeyId = 0
@@ -539,7 +546,13 @@ class EventHandler(
                 pressed[event.keyCode] = true
 
                 if (wasdBit != 0) {
-                    wasdMask = wasdMask or wasdBit
+                    // Debounce rapid WASD changes
+                    val now = System.currentTimeMillis()
+                    synchronized(wasdLock) {
+                        wasdMask = wasdMask or wasdBit
+                        wasdMaskVolatile = wasdMask
+                        lastWasdChangeTime = now
+                    }
                     if (BuildConfig.DEBUG) {
                         Log.d("EventHandler", "WASD DOWN: wasdBit=${rawMaskToString(wasdBit)} rawMask=${rawMaskToString(wasdMask)}")
                     }
@@ -554,10 +567,28 @@ class EventHandler(
                 pressed[event.keyCode] = false
 
                 if (wasdBit != 0) {
-                    Log.i("EventHandler", "release wasdMask before: ${rawMaskToString(wasdMask)}")
-                    wasdMask = wasdMask and wasdBit.inv()
-                    Log.i("EventHandler", "release wasdMask after: ${rawMaskToString(wasdMask)}")
-                    handleWasd(pointerId)
+                    val now = System.currentTimeMillis()
+                    val shouldProcess: Boolean
+                    synchronized(wasdLock) {
+                        // Only process if enough time passed (debounce)
+                        if (now - lastWasdChangeTime >= wasdDebounceMs) {
+                            Log.i("EventHandler", "release wasdMask before: ${rawMaskToString(wasdMask)}")
+                            wasdMask = wasdMask and wasdBit.inv()
+                            wasdMaskVolatile = wasdMask
+                            lastWasdChangeTime = now
+                            Log.i("EventHandler", "release wasdMask after: ${rawMaskToString(wasdMask)}")
+                            true
+                        } else {
+                            // Still within debounce window, just clear the bit but don't trigger handleWasd yet
+                            wasdMask = wasdMask and wasdBit.inv()
+                            wasdMaskVolatile = wasdMask
+                            false
+                        }
+                    }
+                    // Only call handleWasd if enough time passed (debounce)
+                    if (now - lastWasdChangeTime >= wasdDebounceMs || wasdMask == 0) {
+                        handleWasd(pointerId)
+                    }
                 } else {
                     handleKeyUp(event.keyCode, pointerId)
                 }
@@ -605,8 +636,14 @@ class EventHandler(
     }
 
     private fun handleWasd(pointerId: Int) {
-        // Apply opposite key cancellation
-        val effectiveMask = resolveWasdMask(wasdMask)
+        // Prevent reentrant calls
+        if (wasdHandling) return
+        wasdHandling = true
+        
+        val effectiveMask: Int
+        synchronized(wasdLock) {
+            effectiveMask = resolveWasdMask(wasdMask)
+        }
         
         if (BuildConfig.DEBUG) {
             Log.d("EventHandler", "handleWasd: rawMask=${rawMaskToString(wasdMask)} effectiveMask=${rawMaskToString(effectiveMask)} pointerId=$pointerId")
@@ -615,6 +652,7 @@ class EventHandler(
         if (effectiveMask == 0) {
             eventInjector.releaseGesture(pointerId)
             lastWasdMask = 0
+            wasdHandling = false
             return
         }
 
@@ -640,6 +678,7 @@ class EventHandler(
         }
 
         lastWasdMask = effectiveMask
+        wasdHandling = false
     }
 
 

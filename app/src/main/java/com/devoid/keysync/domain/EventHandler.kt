@@ -565,17 +565,41 @@ class EventHandler(
 
     /* ---------- WASD ---------- */
 
+    // Helper: resolve WASD mask with opposite key cancellation
+    private fun resolveWasdMask(rawMask: Int): Int {
+        // Opposite pairs: W(1) vs S(4), A(2) vs D(8)
+        val hasW = (rawMask and MASK_W) != 0
+        val hasS = (rawMask and MASK_S) != 0
+        val hasA = (rawMask and MASK_A) != 0
+        val hasD = (rawMask and MASK_D) != 0
+
+        // Cancel opposites
+        val effectiveW = if (hasW && hasS) false else hasW
+        val effectiveS = if (hasS && hasW) false else hasS
+        val effectiveA = if (hasA && hasD) false else hasA
+        val effectiveD = if (hasD && hasA) false else hasD
+
+        var resolved = 0
+        if (effectiveW) resolved = resolved or MASK_W
+        if (effectiveS) resolved = resolved or MASK_S
+        if (effectiveA) resolved = resolved or MASK_A
+        if (effectiveD) resolved = resolved or MASK_D
+        return resolved
+    }
+
     private fun handleWasd(pointerId: Int) {
-        if (wasdMask == 0) {
+        // Apply opposite key cancellation
+        val effectiveMask = resolveWasdMask(wasdMask)
+        
+        if (effectiveMask == 0) {
             eventInjector.releaseGesture(pointerId)
             lastWasdMask = 0
             return
         }
 
-        val km = keyMap[wasdMask]
+        val km = keyMap[effectiveMask]
         if (km == null) {
-            // No mapping for this combination, fallback to center or release
-            Log.w("EventHandler", "No keyMap for wasdMask: $wasdMask")
+            Log.w("EventHandler", "No keyMap for effective wasdMask: $effectiveMask (raw: $wasdMask)")
             if (lastWasdMask != 0) {
                 eventInjector.releaseGesture(pointerId)
                 lastWasdMask = 0
@@ -594,7 +618,7 @@ class EventHandler(
             eventInjector.injectGesture(pointerId, center, km.position)
         }
 
-        lastWasdMask = wasdMask
+        lastWasdMask = effectiveMask
     }
 
 

@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.hardware.input.InputManager
 import android.net.Uri
+import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -16,10 +17,10 @@ import android.util.Log
 import android.view.InputDevice
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.devoid.keysync.BuildConfig
 import com.devoid.keysync.data.local.DataStoreManager
 import com.devoid.keysync.model.AppConfig
 import com.devoid.keysync.model.DraggableItem
+import com.devoid.keysync.model.DraggableItemType
 import com.devoid.keysync.service.FloatingBubbleService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -30,6 +31,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
+import java.util.Locale
 import javax.inject.Inject
 
 

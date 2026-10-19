@@ -3,7 +3,6 @@ package com.devoid.keysync.domain
 import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
-import com.devoid.keysync.BuildConfig
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.nativeKeyCode
@@ -553,7 +552,7 @@ class EventHandler(
                         wasdMaskVolatile = wasdMask
                         lastWasdChangeTime = now
                     }
-                    if (BuildConfig.DEBUG) {
+                    if (true) {
                         Log.d("EventHandler", "WASD DOWN: wasdBit=${rawMaskToString(wasdBit)} rawMask=${rawMaskToString(wasdMask)}")
                     }
                     handleWasd(pointerId)
@@ -620,7 +619,7 @@ class EventHandler(
         if (effectiveA) resolved = resolved or MASK_A
         if (effectiveD) resolved = resolved or MASK_D
         
-        if (BuildConfig.DEBUG) {
+        if (true) {
             Log.d("EventHandler", "resolveWasdMask: raw=$rawMask (${rawMaskToString(rawMask)}) -> effective=$resolved (${rawMaskToString(resolved)})")
         }
         return resolved
@@ -645,7 +644,7 @@ class EventHandler(
             effectiveMask = resolveWasdMask(wasdMask)
         }
         
-        if (BuildConfig.DEBUG) {
+        if (true) {
             Log.d("EventHandler", "handleWasd: rawMask=${rawMaskToString(wasdMask)} effectiveMask=${rawMaskToString(effectiveMask)} pointerId=$pointerId")
         }
         

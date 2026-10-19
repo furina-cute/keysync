@@ -440,10 +440,10 @@ import kotlinx.coroutines.flow.asStateFlow
 //    }
 //
 //}
-private const val MASK_W = 1 shl 0
-private const val MASK_A = 1 shl 1
-private const val MASK_S = 1 shl 2
-private const val MASK_D = 1 shl 3
+private const val MASK_W = 1 shl 20
+private const val MASK_A = 1 shl 21
+private const val MASK_S = 1 shl 22
+private const val MASK_D = 1 shl 23
 
 const val KEYCODE_CANCEL = 1 shl 4//cancel button for cancelable components
 

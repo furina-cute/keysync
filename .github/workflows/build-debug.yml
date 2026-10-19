@@ -9,9 +9,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    defaults:
-      run:
-        working-directory: ./keysync
 
     steps:
       - name: Checkout repository
@@ -39,5 +36,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: keysync/app/build/outputs/apk/debug/*.apk
           retention-days: 7

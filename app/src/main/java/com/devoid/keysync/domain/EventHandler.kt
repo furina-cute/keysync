@@ -567,27 +567,15 @@ class EventHandler(
 
                 if (wasdBit != 0) {
                     val now = System.currentTimeMillis()
-                    val shouldProcess: Boolean
                     synchronized(wasdLock) {
-                        // Only process if enough time passed (debounce)
-                        if (now - lastWasdChangeTime >= wasdDebounceMs) {
-                            Log.i("EventHandler", "release wasdMask before: ${rawMaskToString(wasdMask)}")
-                            wasdMask = wasdMask and wasdBit.inv()
-                            wasdMaskVolatile = wasdMask
-                            lastWasdChangeTime = now
-                            Log.i("EventHandler", "release wasdMask after: ${rawMaskToString(wasdMask)}")
-                            true
-                        } else {
-                            // Still within debounce window, just clear the bit but don't trigger handleWasd yet
-                            wasdMask = wasdMask and wasdBit.inv()
-                            wasdMaskVolatile = wasdMask
-                            false
-                        }
+                        // Always process key releases (no debounce for releasing keys)
+                        // Just clear the bit from the mask
+                        wasdMask = wasdMask and wasdBit.inv()
+                        wasdMaskVolatile = wasdMask
+                        // Always call handleWasd after releasing a key to update gesture
+                        // The debounce only applies to new key presses, not releases
                     }
-                    // Only call handleWasd if enough time passed (debounce)
-                    if (now - lastWasdChangeTime >= wasdDebounceMs || wasdMask == 0) {
-                        handleWasd(pointerId)
-                    }
+                    handleWasd(pointerId)
                 } else {
                     handleKeyUp(event.keyCode, pointerId)
                 }

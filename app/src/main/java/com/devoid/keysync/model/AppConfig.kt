@@ -15,6 +15,7 @@ data class AppConfig(
     val themePreference: ThemePreference = Default.themePreference,
     val cancellableTouchMode: TouchMode = Default.cancellableTouchMode,
     val normalBtnTouchMode: TouchMode = Default.normalBtnTouchMode,
+    val locale: String = Default.locale,
 ) {
     companion object {
         val Default = AppConfig(
@@ -25,7 +26,8 @@ data class AppConfig(
             deleteDataOnRemove = false,
             themePreference = ThemePreference.SYSTEM_DYNAMIC,
             cancellableTouchMode = TouchMode.TAP,
-            normalBtnTouchMode = TouchMode.TAP
+            normalBtnTouchMode = TouchMode.TAP,
+            locale = "en"
         )
     }
 

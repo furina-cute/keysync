@@ -16,6 +16,7 @@ import android.util.Log
 import android.view.InputDevice
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.devoid.keysync.BuildConfig
 import com.devoid.keysync.data.local.DataStoreManager
 import com.devoid.keysync.model.AppConfig
 import com.devoid.keysync.model.DraggableItem
@@ -78,6 +79,10 @@ class MainActivityViewModel @Inject constructor(
     fun saveKeyConfig(newAppConfig: AppConfig) {
         val newFireKeyCode = newAppConfig.fireKeyCode
         val newShootingModeKeyCode = newAppConfig.shootingModeKeyCode
+        val newLocale = newAppConfig.locale
+        
+        val localeChanged = newLocale != appConfig.value.locale
+        
         if (newFireKeyCode != appConfig.value.fireKeyCode ||
             newShootingModeKeyCode != appConfig.value.shootingModeKeyCode
         ) {
@@ -97,6 +102,22 @@ class MainActivityViewModel @Inject constructor(
                 }
             }
         }
+        if (localeChanged) {
+            // Apply locale immediately
+            val locale = Locale(newLocale)
+            Locale.setDefault(locale)
+            val config = context.resources.configuration
+            config.setLocale(locale)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                context.createConfigurationContext(config)
+            } else {
+                context.resources.updateConfiguration(config, context.resources.displayMetrics)
+            }
+            // Save to SharedPreferences for MainActivity to read on startup
+            context.getSharedPreferences("app_config", Context.MODE_PRIVATE)
+                .edit().putString("locale", newLocale).apply()
+        }
+        
         viewModelScope.launch {
             dataStoreManager.save(DataStoreManager.KEYS_CONFIG, newAppConfig)
             _appConfig.value = newAppConfig

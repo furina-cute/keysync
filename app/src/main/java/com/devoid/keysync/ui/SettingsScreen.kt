@@ -371,6 +371,66 @@ fun SettingsScreen(
 
                     }
                 }
+
+                // Language Section
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    var langDropDownExpanded by remember { mutableStateOf(false) }
+                    Row(
+                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(
+                            Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                        ) {
+                            Text(
+                                stringResource(R.string.language),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1
+                            )
+                            Text(
+                                modifier = Modifier.padding(top = 8.dp),
+                                text = stringResource(R.string.language_preference),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        OutlinedCard(onClick = { langDropDownExpanded = true }) {
+                            Row(
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .widthIn(min = 60.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    when (newConfig.locale) {
+                                        "en" -> "English"
+                                        "zh" -> "中文"
+                                        else -> newConfig.locale
+                                    },
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = null)
+                            }
+                            DropdownMenu(
+                                expanded = langDropDownExpanded,
+                                onDismissRequest = { langDropDownExpanded = false }) {
+                                listOf("en" to "English", "zh" to "中文").forEach { (code, name) ->
+                                    DropdownMenuItem(
+                                        text = { Text(name) },
+                                        onClick = {
+                                            newConfig = newConfig.copy(locale = code)
+                                            langDropDownExpanded = false
+                                        })
+                                }
+                            }
+                        }
+
+                    }
+                }
                 FilledTonalButton(modifier = Modifier.fillMaxWidth(), onClick = {
                     newConfig = AppConfig.Default
                 }) {

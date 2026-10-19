@@ -30,6 +30,8 @@
     <string name="theme_preference">设置此应用的主题偏好</string>
     <string name="reset_to_defaults">重置为默认值</string>
     <string name="about">关于</string>
+    <string name="language">语言</string>
+    <string name="language_preference">设置应用语言</string>
     
     <!-- AboutScreen -->
     <string name="about_title">关于</string>

@@ -2,7 +2,10 @@ package com.devoid.keysync
 
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
+import android.content.res.Resources
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
@@ -46,6 +49,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuProvider
+import java.util.Locale
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -58,6 +62,8 @@ class MainActivity : ComponentActivity() {
     private val viewModel: MainActivityViewModel by viewModels()
     private val navigateTo = mutableStateOf<Any?>(null)
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Apply locale before super.onCreate to ensure correct locale for splash screen
+        applyLocale()
         installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -243,6 +249,20 @@ class MainActivity : ComponentActivity() {
 
                 return true
             }
+        }
+    }
+    
+    private fun applyLocale() {
+        val localeString = getSharedPreferences("app_config", MODE_PRIVATE)
+            .getString("locale", "en") ?: "en"
+        val locale = Locale(localeString)
+        Locale.setDefault(locale)
+        val config = resources.configuration
+        config.setLocale(locale)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            createConfigurationContext(config)
+        } else {
+            resources.updateConfiguration(config, resources.displayMetrics)
         }
     }
 }

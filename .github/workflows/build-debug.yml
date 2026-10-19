@@ -14,13 +14,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Show workspace
-        run: |
-          pwd
-          ls -la
-          
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -29,19 +24,14 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          api-level: 35
-          ndk-version: r27b
-
-      - name: Show SDK location
-        run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          ls -la $ANDROID_HOME
+          packages: |
+            platforms;android-35
+            build-tools;35.0.0
+            ndk;27.2.12479018
+            cmdline-tools;latest
 
       - name: Make gradlew executable
         run: chmod +x gradlew
-
-      - name: Check gradle wrapper
-        run: ./gradlew --version
 
       - name: Build Debug APK
         run: ./gradlew :app:assembleDebug --no-daemon -Dorg.gradle.jvmargs="-Xmx3g" --info

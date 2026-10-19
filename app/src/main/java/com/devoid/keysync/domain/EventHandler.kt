@@ -3,6 +3,7 @@ package com.devoid.keysync.domain
 import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
+import com.devoid.keysync.BuildConfig
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.nativeKeyCode
@@ -539,6 +540,9 @@ class EventHandler(
 
                 if (wasdBit != 0) {
                     wasdMask = wasdMask or wasdBit
+                    if (BuildConfig.DEBUG) {
+                        Log.d("EventHandler", "WASD DOWN: wasdBit=${rawMaskToString(wasdBit)} rawMask=${rawMaskToString(wasdMask)}")
+                    }
                     handleWasd(pointerId)
                 } else {
                     handleKeyDown(event.keyCode, pointerId)
@@ -550,9 +554,9 @@ class EventHandler(
                 pressed[event.keyCode] = false
 
                 if (wasdBit != 0) {
-                    Log.i("EventHandler", "release wasdMask before: $wasdMask")
+                    Log.i("EventHandler", "release wasdMask before: ${rawMaskToString(wasdMask)}")
                     wasdMask = wasdMask and wasdBit.inv()
-                    Log.i("EventHandler", "release wasdMask after: $wasdMask")
+                    Log.i("EventHandler", "release wasdMask after: ${rawMaskToString(wasdMask)}")
                     handleWasd(pointerId)
                 } else {
                     handleKeyUp(event.keyCode, pointerId)
@@ -584,12 +588,29 @@ class EventHandler(
         if (effectiveS) resolved = resolved or MASK_S
         if (effectiveA) resolved = resolved or MASK_A
         if (effectiveD) resolved = resolved or MASK_D
+        
+        if (BuildConfig.DEBUG) {
+            Log.d("EventHandler", "resolveWasdMask: raw=$rawMask (${rawMaskToString(rawMask)}) -> effective=$resolved (${rawMaskToString(resolved)})")
+        }
         return resolved
+    }
+    
+    private fun rawMaskToString(mask: Int): String {
+        val parts = mutableListOf<String>()
+        if ((mask and MASK_W) != 0) parts.add("W")
+        if ((mask and MASK_A) != 0) parts.add("A")
+        if ((mask and MASK_S) != 0) parts.add("S")
+        if ((mask and MASK_D) != 0) parts.add("D")
+        return parts.joinToString("+")
     }
 
     private fun handleWasd(pointerId: Int) {
         // Apply opposite key cancellation
         val effectiveMask = resolveWasdMask(wasdMask)
+        
+        if (BuildConfig.DEBUG) {
+            Log.d("EventHandler", "handleWasd: rawMask=${rawMaskToString(wasdMask)} effectiveMask=${rawMaskToString(effectiveMask)} pointerId=$pointerId")
+        }
         
         if (effectiveMask == 0) {
             eventInjector.releaseGesture(pointerId)

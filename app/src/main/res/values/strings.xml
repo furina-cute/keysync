@@ -1,3 +1,64 @@
 <resources>
     <string name="app_name">Key Sync</string>
+
+    <!-- MainScreen -->
+    <string name="connected_devices">Connected Devices:</string>
+    <string name="devices_count">%1$d Devices</string>
+    <string name="add_games">Add Games:</string>
+    <string name="add_app">Add app</string>
+    <string name="advanced_setting">Advanced Setting</string>
+    <string name="delete_selected_items">Delete Selected Items</string>
+
+    <!-- SettingsScreen -->
+    <string name="settings_title">Settings</string>
+    <string name="back">Back</string>
+    <string name="save">Save</string>
+    <string name="key_configuration">Key Configuration</string>
+    <string name="toggle_shooting_mode">Toggle Shooting Mode:</string>
+    <string name="fire">Fire:</string>
+    <string name="scope">Scope:</string>
+    <string name="button_size">Button Size</string>
+    <string name="button_scale_percent">%1$d%%</string>
+    <string name="delete_data">Delete data</string>
+    <string name="delete_keymapping_removed_apps">Delete Keymapping for removed apps</string>
+    <string name="touch_mode">Touch Mode</string>
+    <string name="cancelable_button">Cancelable Button</string>
+    <string name="touch_behaviour_cancelable">Touch behaviour for cancelable buttons</string>
+    <string name="scope_button">Scope</string>
+    <string name="touch_behaviour_scope">Touch behaviour for Scope button</string>
+    <string name="theme">Theme</string>
+    <string name="theme_preference">Set theme preference for this app</string>
+    <string name="reset_to_defaults">Reset To Defaults</string>
+    <string name="about">About</string>
+
+    <!-- AboutScreen -->
+    <string name="about_title">About</string>
+    <string name="github">Github</string>
+    <string name="reach_me">Reach Me</string>
+    <string name="email">akamunan@yahoo.com</string>
+
+    <!-- Overlay -->
+    <string name="add_keymapping_for">Add keymapping for:</string>
+    <string name="key">Key</string>
+    <string name="compass">Compass</string>
+    <string name="shooting_mode">Shooting Mode</string>
+    <string name="fire_desc">Fire</string>
+    <string name="bag_map">Bag and Map</string>
+    <string name="scope_desc">Scope</string>
+    <string name="enter_shooting_mode">Enter Shooting Mode in FPS games Using Right Mouse Click</string>
+    <string name="fire_fps_games">Fire In FPS Games Using Left Mouse Click</string>
+    <string name="pointer_sensitivity">Pointer Sensitivity: </string>
+    <string name="overlay_opacity">Overlay Opacity: </string>
+    <string name="advanced_settings">Advanced Settings</string>
+    <string name="close_overlay">Close Overlay</string>
+    <string name="close">Close</string>
+    <string name="add_item">Add Item</string>
+    <string name="settings">Settings</string>
+    <string name="mouse_pointer">pointer</string>
+    <string name="remove">Remove</string>
+    <string name="scale">Scale</string>
+
+    <!-- Notification -->
+    <string name="notification_channel_name">KeySync Overlay Service</string>
+    <string name="notification_text">Key Sync Overlay service is running</string>
 </resources>

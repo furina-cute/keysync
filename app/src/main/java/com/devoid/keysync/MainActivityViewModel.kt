@@ -53,17 +53,20 @@ class MainActivityViewModel @Inject constructor(
     private val _connectedDevices = MutableStateFlow<Map<Int, String>>(hashMapOf())
     val connectedDevices = _connectedDevices.asStateFlow()
 
+    private val binderReceivedListener = Shizuku.OnBinderReceivedListener {
+        val binder = Shizuku.getBinder()
+        binder?.let {
+            _shizukuState.value = UiState.ShizukuRunning(it)
+        }
+    }
+    private val binderDeadListener = Shizuku.OnBinderDeadListener {
+        _shizukuState.value = UiState.ShizukuNotRunning
+    }
+
     init {
         Shizuku.addRequestPermissionResultListener(this)
-        Shizuku.addBinderReceivedListener {
-            val binder = Shizuku.getBinder()
-            binder?.let {
-                _shizukuState.value = UiState.ShizukuRunning(it)
-            }
-        }
-        Shizuku.addBinderDeadListener {
-            _shizukuState.value = UiState.ShizukuNotRunning
-        }
+        Shizuku.addBinderReceivedListener(binderReceivedListener)
+        Shizuku.addBinderDeadListener(binderDeadListener)
         getShizukuBinder()
         getConnectedExternalDevices()
         viewModelScope.launch {
@@ -240,8 +243,8 @@ class MainActivityViewModel @Inject constructor(
 
     override fun onCleared() {
         Shizuku.removeRequestPermissionResultListener(this)
-        Shizuku.removeBinderReceivedListener(this)
-        Shizuku.removeBinderDeadListener(this)
+        Shizuku.removeBinderReceivedListener(binderReceivedListener)
+        Shizuku.removeBinderDeadListener(binderDeadListener)
         Log.i("MainActivityViewModel", "onCleared: main viewModelCleared ")
     }
 

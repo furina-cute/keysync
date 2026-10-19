@@ -11,9 +11,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: build-env
     outputs:
       version_name: ${{ steps.version.outputs.version_name }}
+      skipped: ${{ steps.version_check.outputs.skip }}
 
     steps:
       - name: Checkout code
@@ -28,33 +28,48 @@ jobs:
       - name: Check if versionName changed
         id: version_check
         run: |
-          PREV_NAME=$(git show HEAD^:app/build.gradle.kts | grep 'versionName =' | sed 's/.*"\(.*\)".*/\1/' || echo "")
-          if [ "$PREV_NAME" = "${{ steps.version.outputs.version_name }}" ]; then
+          PREV_NAME=$(git show HEAD^:app/build.gradle.kts 2>/dev/null | grep 'versionName =' | sed 's/.*"\(.*\)".*/\1/' || echo "")
+          if [ -n "$PREV_NAME" ] && [ "$PREV_NAME" = "${{ steps.version.outputs.version_name }}" ]; then
             echo "Version name unchanged. Skipping build."
             echo "skip=true" >> $GITHUB_OUTPUT
           else
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Set Up JDK
+      - name: Guard release secrets
+        id: secrets_check
         if: steps.version_check.outputs.skip != 'true'
-        uses: actions/setup-java@v4
+        run: |
+          if [ -z "${{ secrets.KEYSTORE }}" ]; then
+            echo "KEYSTORE secret missing; skipping release build."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set Up JDK
+        if: steps.version_check.outputs.skip != 'true' && steps.secrets_check.outputs.skip != 'true'
+        uses: actions/setup-java@v5
         with:
           distribution: zulu
           java-version: 17
           cache: gradle
 
       - name: Setup Android SDK
-        if: steps.version_check.outputs.skip != 'true'
+        if: steps.version_check.outputs.skip != 'true' && steps.secrets_check.outputs.skip != 'true'
         uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: "latest"
+          accept-android-sdk-licenses: true
+          packages: "platforms;android-35 build-tools;35.0.0 platform-tools"
 
       - name: Decode Keystore
-        if: steps.version_check.outputs.skip != 'true'
+        if: steps.version_check.outputs.skip != 'true' && steps.secrets_check.outputs.skip != 'true'
         run: |
           echo "${{ secrets.KEYSTORE }}" | base64 -d > app/key.jks
 
       - name: Create gradle.properties
-        if: steps.version_check.outputs.skip != 'true'
+        if: steps.version_check.outputs.skip != 'true' && steps.secrets_check.outputs.skip != 'true'
         run: |
           mkdir -p ~/.gradle
           cat <<EOF > ~/.gradle/gradle.properties
@@ -65,15 +80,15 @@ jobs:
           EOF
 
       - name: Grant execute permission to gradlew
-        if: steps.version_check.outputs.skip != 'true'
+        if: steps.version_check.outputs.skip != 'true' && steps.secrets_check.outputs.skip != 'true'
         run: chmod +x gradlew
 
       - name: Build Release APK
-        if: steps.version_check.outputs.skip != 'true'
+        if: steps.version_check.outputs.skip != 'true' && steps.secrets_check.outputs.skip != 'true'
         run: ./gradlew assembleRelease
 
       - name: Upload APK Artifact
-        if: steps.version_check.outputs.skip != 'true'
+        if: steps.version_check.outputs.skip != 'true' && steps.secrets_check.outputs.skip != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: release-apk-v${{ steps.version.outputs.version_name }}
@@ -86,7 +101,7 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
-    if: needs.build.outputs.version_name != ''
+    if: needs.build.outputs.skipped != 'true'
 
     steps:
       - name: Download APK

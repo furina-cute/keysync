@@ -13,7 +13,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.concurrent.synchronized
 
 abstract class EventInjectorImpl(private val eventManager: EventManager = EventManagerImpl()) :
     EventInjector {

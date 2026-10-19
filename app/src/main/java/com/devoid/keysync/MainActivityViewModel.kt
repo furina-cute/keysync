@@ -240,6 +240,8 @@ class MainActivityViewModel @Inject constructor(
 
     override fun onCleared() {
         Shizuku.removeRequestPermissionResultListener(this)
+        Shizuku.removeBinderReceivedListener(this)
+        Shizuku.removeBinderDeadListener(this)
         Log.i("MainActivityViewModel", "onCleared: main viewModelCleared ")
     }
 

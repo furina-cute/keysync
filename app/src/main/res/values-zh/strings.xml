@@ -1,0 +1,66 @@
+<resources>
+    <string name="app_name">Key Sync</string>
+    
+    <!-- MainScreen -->
+    <string name="connected_devices">已连接设备:</string>
+    <string name="devices_count">%1$d 设备</string>
+    <string name="add_games">添加游戏:</string>
+    <string name="add_app">添加应用</string>
+    <string name="advanced_setting">高级设置</string>
+    <string name="delete_selected_items">删除选中项目</string>
+    
+    <!-- SettingsScreen -->
+    <string name="settings_title">设置</string>
+    <string name="back">返回</string>
+    <string name="save">保存</string>
+    <string name="key_configuration">按键配置</string>
+    <string name="toggle_shooting_mode">切换射击模式:</string>
+    <string name="fire">开火:</string>
+    <string name="scope">镜头/瞄准:</string>
+    <string name="button_size">按钮大小</string>
+    <string name="button_scale_percent">%1$d%%</string>
+    <string name="delete_data">删除数据</string>
+    <string name="delete_keymapping_removed_apps">为已移除的应用删除按键映射</string>
+    <string name="touch_mode">触摸模式</string>
+    <string name="cancelable_button">可取消按钮</string>
+    <string name="touch_behaviour_cancelable">可取消按钮的触摸行为</string>
+    <string name="scope_button">范围按钮</string>
+    <string name="touch_behaviour_scope">范围按钮的触摸行为</string>
+    <string name="theme">主题</string>
+    <string name="theme_preference">设置此应用的主题偏好</string>
+    <string name="reset_to_defaults">重置为默认值</string>
+    <string name="about">关于</string>
+    
+    <!-- AboutScreen -->
+    <string name="about_title">关于</string>
+    <string name="github">GitHub</string>
+    <string name="reach_me">联系我</string>
+    <string name="email">akamunan@yahoo.com</string>
+    
+    <!-- FloatingWindow/Overlay -->
+    <string name="add_keymapping_for">添加按键映射:</string>
+    <string name="key">按键</string>
+    <string name="compass">指南针</string>
+    <string name="shooting_mode">射击模式</string>
+    <string name="fire_desc">开火</string>
+    <string name="bag_map">背包和地图</string>
+    <string name="scope_desc">瞄准镜</string>
+    <string name="enter_shooting_mode">在 FPS 游戏中使用右键点击进入射击模式</string>
+    <string name="fire_fps_games">在 FPS 游戏中使用左键点击开火</string>
+    <string name="pointer_sensitivity">指针灵敏度:</string>
+    <string name="overlay_opacity">叠加层不透明度:</string>
+    <string name="advanced_settings">高级设置</string>
+    <string name="close_overlay">关闭叠加层</string>
+    <string name="close">关闭</string>
+    <string name="add_item">添加项目</string>
+    <string name="settings">设置</string>
+    <string name="mouse_pointer">鼠标指针</string>
+    <string name="remove">移除</string>
+    <string name="scale">缩放</string>
+    
+    <!-- FloatingBubbleService Notification -->
+    <string name="notification_channel_name">KeySync 叠加服务</string>
+    <string name="notification_title">Key Sync</string>
+    <string name="notification_text">Key Sync 叠加服务正在运行</string>
+    <string name="keysync_overlay_service_running">叠加服务正在运行</string>
+</resources>

@@ -47,7 +47,8 @@ class FloatingWindowStateManager @Inject constructor(
     private val _appConfig =MutableStateFlow(AppConfig.Default)
     val keysConfig = _appConfig.asStateFlow()
 
-    val sensitivity = (10f * pointerSensitivity.value)//at max 10x the original offset
+    val sensitivity: Float
+        get() = 10f * pointerSensitivity.value // at max 10x the original offset
 
     private val _isBubbleExpanded = MutableStateFlow(false)
     val isBubbleExpanded = _isBubbleExpanded.asStateFlow()
@@ -207,6 +208,7 @@ class FloatingWindowStateManager @Inject constructor(
     fun onDestroy(){
         _isBubbleExpanded.value = false
         eventHandler.clear()
+        scope.cancel() // Cancel all coroutines
     }
 
     @SuppressLint("InternalInsetResource", "DiscouragedApi")

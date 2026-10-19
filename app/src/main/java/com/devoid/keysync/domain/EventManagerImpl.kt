@@ -68,6 +68,9 @@ class EventManagerImpl : EventManager {
             val nextId = propsArray[i + 1].id
             pointerIndexMap.put(nextId, i)
         }
+        // Clear the last element to avoid stale references
+        propsArray[activePointerCount - 1] = MotionEvent.PointerProperties()
+        coordsArray[activePointerCount - 1] = MotionEvent.PointerCoords()
         pointerIndexMap.delete(id)
         activePointerCount--
         return removedIndex

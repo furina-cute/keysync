@@ -21,7 +21,8 @@ class CancelableTapModeTouchHandler(private val eventInjector: EventInjector) : 
         keyMap: KeyMap
     ): Boolean {
         if (keyEvent.action == MotionEvent.ACTION_DOWN) {
-            eventInjector.injectPointer(pointerId, keyMap.position, keyMap.end!!)
+            val endPos = keyMap.end ?: keyMap.position
+            eventInjector.injectPointer(pointerId, keyMap.position, endPos)
             eventInjector.releasePointer(pointerId)
             return !isPressed
         }
@@ -38,7 +39,8 @@ class CancelableHoldModeTouchHandler(private val eventInjector: EventInjector) :
         keyMap: KeyMap
     ): Boolean {
         if (keyEvent.action == MotionEvent.ACTION_DOWN || keyEvent.action == MotionEvent.ACTION_UP) {
-            eventInjector.injectPointer(pointerId, keyMap.position, keyMap.end!!)
+            val endPos = keyMap.end ?: keyMap.position
+            eventInjector.injectPointer(pointerId, keyMap.position, endPos)
             eventInjector.releasePointer(pointerId)
         }
         return keyEvent.action == MotionEvent.ACTION_DOWN
@@ -57,7 +59,8 @@ class CancelableMixedModeTouchHandler(private val eventInjector: EventInjector) 
     ): Boolean {
         if (keyEvent.action == MotionEvent.ACTION_DOWN) {
             lastKeyDownMap[pointerId] = System.currentTimeMillis()
-            eventInjector.injectPointer(pointerId, keyMap.position, keyMap.end!!)
+            val endPos = keyMap.end ?: keyMap.position
+            eventInjector.injectPointer(pointerId, keyMap.position, endPos)
             eventInjector.releasePointer(pointerId)
             return !isPressed
         } else if (keyEvent.action == MotionEvent.ACTION_UP) {
@@ -65,7 +68,8 @@ class CancelableMixedModeTouchHandler(private val eventInjector: EventInjector) 
                 return false
             val difference = System.currentTimeMillis() - (lastKeyDownMap[pointerId] ?: 0)
             if (difference > minDifference) {
-               eventInjector.injectPointer(pointerId, keyMap.position, keyMap.end!!)
+                val endPos = keyMap.end ?: keyMap.position
+                eventInjector.injectPointer(pointerId, keyMap.position, endPos)
                 eventInjector.releasePointer(pointerId)
                 return false
             }

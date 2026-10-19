@@ -58,13 +58,13 @@ fun AboutScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(text = "About")
+                    Text(text = stringResource(R.string.about_title))
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 })
@@ -106,7 +106,7 @@ fun AboutScreen(
             ) {
                 FilledTonalButton(modifier = Modifier, onClick = onOpenGithub) {
                     Icon(painterResource(R.drawable.github), contentDescription = null)
-                    Text(modifier = Modifier.padding(start = 16.dp), text = "Github")
+                    Text(modifier = Modifier.padding(start = 16.dp), text = stringResource(R.string.github))
                 }
 //                FilledTonalButton(modifier = Modifier, onClick = {}) {
 //                    Icon(painterResource(R.drawable.apk_document), contentDescription = null)
@@ -116,12 +116,12 @@ fun AboutScreen(
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                     Text(
-                        "Reach Me",
+                        stringResource(R.string.reach_me),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        "akamunan@yahoo.com",
+                        stringResource(R.string.email),
                         modifier = Modifier
                             .clickable { }
                             .padding(top = 8.dp),

@@ -42,7 +42,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -98,7 +98,7 @@ class FloatingBubbleService : Service() {
         _isRunning.value = true
         val channel = NotificationChannel(
             "channel1",
-            "KeySync Overlay Service",
+            baseContext.getString(R.string.notification_channel_name),
             NotificationManager.IMPORTANCE_LOW
         )
         val launchedPackageName = intent?.getStringExtra(INTENT_EXTRA_PACAKAGE)
@@ -110,12 +110,7 @@ class FloatingBubbleService : Service() {
         val notification = NotificationCompat.Builder(this, "channel1").apply {
             setContentTitle(ContextCompat.getString(baseContext, R.string.app_name))
             setContentText(
-                "${
-                    ContextCompat.getString(
-                        baseContext,
-                        R.string.app_name
-                    )
-                } Overlay service is running"
+                baseContext.getString(R.string.notification_text)
             )
         }.build()
         startForeground(1, notification)
@@ -376,7 +371,7 @@ class FloatingBubbleService : Service() {
                         }) {
                             Icon(
                                 imageVector = Icons.Rounded.Add,
-                                contentDescription = "Add Item"
+                                contentDescription = stringResource(R.string.add_item)
                             )
                         }
 
@@ -386,7 +381,7 @@ class FloatingBubbleService : Service() {
                         }) {
                             Icon(
                                 imageVector = Icons.Rounded.Settings,
-                                contentDescription = "Settings",
+                                contentDescription = stringResource(R.string.settings),
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
@@ -483,7 +478,7 @@ fun PreviewFloatingBubble() {
                     }) {
                         Icon(
                             imageVector = Icons.Rounded.Add,
-                            contentDescription = "Add Item"
+                            contentDescription = stringResource(R.string.add_item)
                         )
                     }
 
@@ -491,7 +486,7 @@ fun PreviewFloatingBubble() {
                     }) {
                         Icon(
                             imageVector = Icons.Rounded.Settings,
-                            contentDescription = "Settings",
+                            contentDescription = stringResource(R.string.settings),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }

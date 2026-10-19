@@ -572,20 +572,29 @@ class EventHandler(
             return
         }
 
-        keyMap[wasdMask]?.let {
-            val wasActive = lastWasdMask != 0
-//            val isCombo = wasdMask.countOneBits() > 1
-
-            if (wasActive) {
-                // gesture already exists → transform
-                eventInjector.transFormGesture(pointerId, it.position)
-            } else {
-                // first key press → inject
-                eventInjector.injectGesture(pointerId, it.center!!, it.position)
+        val km = keyMap[wasdMask]
+        if (km == null) {
+            // No mapping for this combination, fallback to center or release
+            Log.w("EventHandler", "No keyMap for wasdMask: $wasdMask")
+            if (lastWasdMask != 0) {
+                eventInjector.releaseGesture(pointerId)
+                lastWasdMask = 0
             }
-
-            lastWasdMask = wasdMask
+            return
         }
+
+        val wasActive = lastWasdMask != 0
+
+        if (wasActive) {
+            // gesture already exists → transform
+            eventInjector.transFormGesture(pointerId, km.position)
+        } else {
+            // first key press → inject
+            val center = km.center ?: km.position
+            eventInjector.injectGesture(pointerId, center, km.position)
+        }
+
+        lastWasdMask = wasdMask
     }
 
 
@@ -664,9 +673,10 @@ class EventHandler(
         }
 
         keyMap[keyCode]?.let {
-            if (pressed)
-                eventInjector.injectPointer(pointerId, it.position, it.end!!)
-            else
+            if (pressed) {
+                val endPos = it.end ?: it.position
+                eventInjector.injectPointer(pointerId, it.position, endPos)
+            } else
                 eventInjector.releasePointer(pointerId)
         }
         return true
@@ -749,10 +759,27 @@ class EventHandler(
                         x = item.s.x + ((item.d.x - item.s.x) / 2),
                         y = item.s.y + ((item.d.y - item.s.y) / 2)
                     )
+                    val wsa = Offset(
+                        x = item.w.x + (item.a.x - item.w.x) / 3f + (item.s.x - item.w.x) / 3f,
+                        y = item.w.y + (item.a.y - item.w.y) / 3f + (item.s.y - item.w.y) / 3f
+                    )
+                    val wsd = Offset(
+                        x = item.w.x + (item.s.x - item.w.x) / 3f + (item.d.x - item.w.x) / 3f,
+                        y = item.w.y + (item.s.y - item.w.y) / 3f + (item.d.y - item.w.y) / 3f
+                    )
+                    val wasd = Offset(
+                        x = item.w.x + (item.a.x - item.w.x) / 4f + (item.s.x - item.w.x) / 4f + (item.d.x - item.w.x) / 4f,
+                        y = item.w.y + (item.a.y - item.w.y) / 4f + (item.s.y - item.w.y) / 4f + (item.d.y - item.w.y) / 4f
+                    )
                     keyMap[MASK_W or MASK_A] = KeyMap(position = wa, center = item.center)
                     keyMap[MASK_W or MASK_D] = KeyMap(position = wd, center = item.center)
                     keyMap[MASK_S or MASK_A] = KeyMap(position = sa, center = item.center)
                     keyMap[MASK_S or MASK_D] = KeyMap(position = sd, center = item.center)
+                    keyMap[MASK_W or MASK_S or MASK_A] = KeyMap(position = wsa, center = item.center)
+                    keyMap[MASK_W or MASK_S or MASK_D] = KeyMap(position = wsd, center = item.center)
+                    keyMap[MASK_W or MASK_A or MASK_D] = KeyMap(position = wasd, center = item.center)
+                    keyMap[MASK_S or MASK_A or MASK_D] = KeyMap(position = wasd, center = item.center)
+                    keyMap[MASK_W or MASK_S or MASK_A or MASK_D] = KeyMap(position = item.center, center = item.center)
 
                     alloc(KEYCODE_WASD)
                 }
@@ -825,7 +852,13 @@ class EventHandler(
     fun clear() {
         eventInjector.clear()
         pressed.fill(false)
+        cancelToggle.fill(false)
         wasdMask = 0
+        lastWasdMask = 0
         shootingMode = false
+        keyIdMap.clear()
+        nextKeyId = 0
+        pointerIds.fill(-1)
+        keyMap.clear()
     }
 }

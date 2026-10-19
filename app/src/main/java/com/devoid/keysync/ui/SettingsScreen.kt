@@ -47,11 +47,13 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.devoid.keysync.R
 import com.devoid.keysync.model.AppConfig
 import com.devoid.keysync.model.ThemePreference
 import com.devoid.keysync.model.TouchMode
@@ -74,20 +76,20 @@ fun SettingsScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(text = "Settings")
+                    Text(text = stringResource(R.string.settings_title))
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 }, actions = {
                     Button(modifier = Modifier.padding(end = 8.dp), enabled = newConfig != appConfig, onClick = {
                         onSave(newConfig)
                     }) {
-                        Text("Save")
+                        Text(stringResource(R.string.save))
                     }
                 })
         }
@@ -106,24 +108,24 @@ fun SettingsScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Text(
-                            "Key Configuration",
+                            stringResource(R.string.key_configuration),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.primary
                         )
                         Row {
-                            KeyConfigTextField(title = "Toggle Shooting Mode:", value = newConfig.shootingModeKeyCode.keyCodeToString()) {
+                            KeyConfigTextField(title = stringResource(R.string.toggle_shooting_mode), value = newConfig.shootingModeKeyCode.keyCodeToString()) {
                                 newConfig=newConfig.copy(shootingModeKeyCode = it.nativeKeyEvent.keyCode)
                                 return@KeyConfigTextField true
                             }
                         }
                         HorizontalDivider()
-                        KeyConfigTextField(title = "Fire:", value = newConfig.fireKeyCode.keyCodeToString()) {
+                        KeyConfigTextField(title = stringResource(R.string.fire), value = newConfig.fireKeyCode.keyCodeToString()) {
                             newConfig=newConfig.copy(fireKeyCode = it.nativeKeyEvent.keyCode)
                             return@KeyConfigTextField true
                         }
                         HorizontalDivider()
-                        KeyConfigTextField(title = "Scope:", value = newConfig.scopeKeyCode.keyCodeToString()) {
+                        KeyConfigTextField(title = stringResource(R.string.scope), value = newConfig.scopeKeyCode.keyCodeToString()) {
                             newConfig=newConfig.copy(scopeKeyCode = it.nativeKeyEvent.keyCode)
                             return@KeyConfigTextField true
                         }
@@ -135,7 +137,7 @@ fun SettingsScreen(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Button Size",
+                                text = stringResource(R.string.button_size),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .weight(1f),
@@ -143,7 +145,7 @@ fun SettingsScreen(
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.primary
                             )
-                            Text("${(newConfig.buttonScale * 100).roundToInt()} %")
+                            Text(stringResource(R.string.button_scale_percent, (newConfig.buttonScale * 100).roundToInt()))
                         }
                         Slider(value = newConfig.buttonScale,
                             valueRange = 0f..2f, steps = 0, onValueChange = {
@@ -162,14 +164,14 @@ fun SettingsScreen(
                                 .weight(1f)
                         ) {
                             Text(
-                                "Delete data",
+                                stringResource(R.string.delete_data),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
                                 modifier = Modifier.padding(top = 8.dp),
-                                text = "Delete Keymapping for removed apps",
+                                text = stringResource(R.string.delete_keymapping_removed_apps),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -197,7 +199,7 @@ fun SettingsScreen(
                             scopeBody,
                             scopeSelector) = createRefs()
                         Text(
-                            "Touch Mode",
+                            stringResource(R.string.touch_mode),
                             modifier = Modifier.constrainAs(title) {
                                 top.linkTo(parent.top)
                                 start.linkTo(parent.start)
@@ -207,7 +209,7 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            "Cancelable Button",
+                            stringResource(R.string.cancelable_button),
                             modifier = Modifier
                                 .constrainAs(cancelTitle) {
                                     top.linkTo(title.bottom)
@@ -221,7 +223,7 @@ fun SettingsScreen(
                                     top.linkTo(cancelTitle.bottom)
                                 }
                                 .padding(top = 8.dp),
-                            text = "Touch behaviour for cancelable buttons",
+                            text = stringResource(R.string.touch_behaviour_cancelable),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -262,7 +264,7 @@ fun SettingsScreen(
                                 }
                                 .padding(top = 8.dp))
                         Text(
-                            "Scope",
+                            stringResource(R.string.scope_button),
                             modifier = Modifier
                                 .constrainAs(scopeTitle) {
                                     top.linkTo(divider1.bottom)
@@ -276,7 +278,7 @@ fun SettingsScreen(
                                     top.linkTo(scopeTitle.bottom)
                                 }
                                 .padding(top = 8.dp),
-                            text = "Touch behaviour for Scope button",
+                            text = stringResource(R.string.touch_behaviour_scope),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -327,7 +329,7 @@ fun SettingsScreen(
                                 .weight(1f)
                         ) {
                             Text(
-                                "Theme",
+                                stringResource(R.string.theme),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.primary,
@@ -335,7 +337,7 @@ fun SettingsScreen(
                             )
                             Text(
                                 modifier = Modifier.padding(top = 8.dp),
-                                text = "Set theme preference for this app",
+                                text = stringResource(R.string.theme_preference),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -379,7 +381,7 @@ fun SettingsScreen(
                         Icon(Icons.Rounded.Refresh, contentDescription = null)
                         Text(
                             modifier = Modifier.padding(start = 16.dp),
-                            text = "Reset To Defaults",
+                            text = stringResource(R.string.reset_to_defaults),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -393,7 +395,7 @@ fun SettingsScreen(
                         Icon(Icons.Rounded.Info, contentDescription = null)
                         Text(
                             modifier = Modifier.padding(start = 16.dp),
-                            text = "About",
+                            text = stringResource(R.string.about),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )

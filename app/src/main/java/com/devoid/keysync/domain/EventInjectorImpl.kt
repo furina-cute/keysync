@@ -13,10 +13,12 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.concurrent.synchronized
 
 abstract class EventInjectorImpl(private val eventManager: EventManager = EventManagerImpl()) :
     EventInjector {
     private val animators = mutableMapOf<Int, ObjectRandomAnimator>()
+    private val animatorLock = Any() // mutex for animator map
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val taskQueue = Channel<suspend ()->Unit>()
@@ -31,9 +33,11 @@ abstract class EventInjectorImpl(private val eventManager: EventManager = EventM
     }
     override fun injectGesture(pointerID: Int, o1: Offset, o2: Offset) {
 
-        animators[pointerID]?.let {
-            it.cancel()
-            animators.remove(pointerID)
+        synchronized(animatorLock) {
+            animators[pointerID]?.let {
+                it.cancel()
+                animators.remove(pointerID)
+            }
         }
         val animator = ObjectRandomAnimator()
         animator.init(o1, o2, duration = 80)
@@ -53,7 +57,9 @@ abstract class EventInjectorImpl(private val eventManager: EventManager = EventM
             }
         }
         animator.doOnEnd {
-            animators.remove(pointerID)
+            synchronized(animatorLock) {
+                animators.remove(pointerID)
+            }
         }
         animator.doOnStart {//inject action down once at $o1 if not injected
             scope.launch {
@@ -63,15 +69,20 @@ abstract class EventInjectorImpl(private val eventManager: EventManager = EventM
             }
         }
         animator.start()
-        animators[pointerID] = animator
+        synchronized(animatorLock) {
+            animators[pointerID] = animator
+        }
     }
 
     override fun transFormGesture(pointerID: Int, position: Offset) {
         scope.launch {
             taskQueue.send {
-                eventManager.getPointerLocation(pointerID)?.let {
+                eventManager.getPointerLocation(pointerID)?.let { currentPos ->
                     withContext(Dispatchers.Main){
-                        injectGesture(pointerID,it,position)
+                        // Only transform if there's an active gesture for this pointer
+                        if (injected(pointerID)) {
+                            injectGesture(pointerID, currentPos, position)
+                        }
                     }
                 }
             }
@@ -79,9 +90,11 @@ abstract class EventInjectorImpl(private val eventManager: EventManager = EventM
     }
 
     override fun releaseGesture(pointerID: Int) {
-        animators[pointerID]?.let {
-            it.cancel()
-            animators.remove(pointerID)
+        synchronized(animatorLock) {
+            animators[pointerID]?.let {
+                it.cancel()
+                animators.remove(pointerID)
+            }
         }
         releasePointer(pointerID)
     }

@@ -14,7 +14,8 @@ class TapModeTouchHandler(private val eventInjector: EventInjector) : MultiModeT
         keyMap: KeyMap
     ): Boolean {
         if (keyEvent.action == MotionEvent.ACTION_DOWN) {
-            eventInjector.injectPointer(pointerId, keyMap.position, keyMap.end!!)
+            val endPos = keyMap.end ?: keyMap.position
+            eventInjector.injectPointer(pointerId, keyMap.position, endPos)
             eventInjector.releasePointer(pointerId)
             return !isPressed
         }
@@ -30,7 +31,8 @@ class HoldModeTouchHandler(private val eventInjector: EventInjector) : MultiMode
         keyMap: KeyMap
     ): Boolean {
         return if (keyEvent.action == MotionEvent.ACTION_DOWN) {
-            eventInjector.injectPointer(pointerId, keyMap.position, keyMap.end!!)
+            val endPos = keyMap.end ?: keyMap.position
+            eventInjector.injectPointer(pointerId, keyMap.position, endPos)
             true
         }else if (keyEvent.action == MotionEvent.ACTION_UP){
             eventInjector.releasePointer(pointerId)
@@ -54,7 +56,8 @@ class MixedModeTouchHandler(private val eventInjector: EventInjector) : MultiMod
             if (isPressed) {
                 eventInjector.releasePointer(pointerId)
             } else {
-                eventInjector.injectPointer(pointerId, keyMap.position, keyMap.end!!)
+                val endPos = keyMap.end ?: keyMap.position
+                eventInjector.injectPointer(pointerId, keyMap.position, endPos)
             }
             return !isPressed
         } else if (keyEvent.action == MotionEvent.ACTION_UP) {

@@ -178,7 +178,7 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate(route = MainScreen)
                             },
                             onExportConfig = { exportFilePicker.launch("keysync_config.json") },
-                            onImportConfig = { importFilePicker.launch() })
+                            onImportConfig = { importFilePicker.launch(arrayOf("*/*")) })
                     }
                     composable<AboutScreen> {
                         AboutScreen(

@@ -191,7 +191,6 @@ class MainActivity : ComponentActivity() {
                                 LocaleManager.setLocale(this, language)
                                 finish()
                                 startActivity(intent)
-                            }}
                             })
                     }
                     composable<AboutScreen> {

@@ -1,5 +1,6 @@
 package com.devoid.keysync.ui
 
+import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
@@ -59,6 +60,10 @@ import com.devoid.keysync.model.ThemePreference
 import com.devoid.keysync.model.TouchMode
 import com.devoid.keysync.util.capitalizeFirst
 import com.devoid.keysync.util.keyCodeToString
+import kotlinx.serialization.json.Json
+import java.io.File
+import java.nio.charset.StandardCharsets
+import android.util.Log
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,6 +72,7 @@ import kotlin.math.roundToInt
 fun SettingsScreen(
     modifier: Modifier = Modifier,
     appConfig: AppConfig = AppConfig.Default,
+    context: Context = androidx.compose.ui.platform.LocalContext.current,
     onSave: (AppConfig) -> Unit = {},
     onNavigateBack: () -> Unit = {},
     onNavigateAbout: () -> Unit = {}
@@ -461,9 +467,6 @@ fun SettingsScreen(
                         )
                     }
                 }
-            }
-        }
-    }
                 // Import/Export Configuration
                 Card(modifier = Modifier.fillMaxWidth()) {
                     var exportExpanded by remember { mutableStateOf(false) }
@@ -493,7 +496,9 @@ fun SettingsScreen(
                         }
                         OutlinedCard(onClick = { exportExpanded = true }) {
                             Row(
-                                modifier = Modifier.padding(8.dp).widthIn(min = 60.dp),
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .widthIn(min = 60.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text("Export", style = MaterialTheme.typography.titleMedium)
@@ -502,7 +507,9 @@ fun SettingsScreen(
                         }
                         OutlinedCard(onClick = { importExpanded = true }) {
                             Row(
-                                modifier = Modifier.padding(8.dp).widthIn(min = 60.dp),
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .widthIn(min = 60.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text("Import", style = MaterialTheme.typography.titleMedium)
@@ -512,8 +519,8 @@ fun SettingsScreen(
                     }
                     DropdownMenu(expanded = exportExpanded, onDismissRequest = { exportExpanded = false }) {
                         DropdownMenuItem(onClick = {
-                            val configJson = kotlinx.serialization.json.Json.encodeToString(newConfig)
-                            val file = java.io.File(getExternalFilesDir(null)?.path ?: "", "keysync_config_${System.currentTimeMillis()}.json")
+                            val configJson = Json.encodeToString(newConfig)
+                            val file = File(context.getExternalFilesDir(null)?.path ?: "", "keysync_config_${System.currentTimeMillis()}.json")
                             file.writeText(configJson)
                             Log.d("SettingsScreen", "Config exported to: ${file.absolutePath}")
                             exportExpanded = false
@@ -522,11 +529,11 @@ fun SettingsScreen(
                     }
                     DropdownMenu(expanded = importExpanded, onDismissRequest = { importExpanded = false }) {
                         DropdownMenuItem(onClick = {
-                            val defaultFile = java.io.File(getExternalFilesDir(null)?.path ?: "", "keysync_config.json")
+                            val defaultFile = File(context.getExternalFilesDir(null)?.path ?: "", "keysync_config.json")
                             if (defaultFile.exists()) {
-                                val json = defaultFile.readText(java.nio.charset.StandardCharsets.UTF_8)
+                                val json = defaultFile.readText(StandardCharsets.UTF_8)
                                 try {
-                                    val config = kotlinx.serialization.json.Json.decodeFromString(AppConfig.serializer(), json)
+                                    val config = Json.decodeFromString(AppConfig.serializer(), json)
                                     newConfig = newConfig.copy(
                                         shootingModeKeyCode = config.shootingModeKeyCode,
                                         fireKeyCode = config.fireKeyCode,
@@ -547,6 +554,9 @@ fun SettingsScreen(
                         }) { Text("Load from file") }
                     }
                 }
+            }
+        }
+    }
 }
 
 @Composable

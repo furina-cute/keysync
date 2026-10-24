@@ -198,7 +198,7 @@ class MainActivity : ComponentActivity() {
                                 }
                                 finish()
                                 startActivity(intent)
-                            }}
+                            })
                     }
                     composable<AboutScreen> {
                         AboutScreen(

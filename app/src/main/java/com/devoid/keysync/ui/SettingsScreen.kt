@@ -518,40 +518,49 @@ fun SettingsScreen(
                         }
                     }
                     DropdownMenu(expanded = exportExpanded, onDismissRequest = { exportExpanded = false }) {
-                        DropdownMenuItem(onClick = {
-                            val configJson = Json.encodeToString(newConfig)
-                            val file = File(context.getExternalFilesDir(null)?.path ?: "", "keysync_config_${System.currentTimeMillis()}.json")
-                            file.writeText(configJson)
-                            Log.d("SettingsScreen", "Config exported to: ${file.absolutePath}")
-                            exportExpanded = false
-                        }) { Text("Save config file") }
-                        DropdownMenuItem(onClick = { importExpanded = false }) { Text("Load config file") }
+                        DropdownMenuItem(
+                            text = { Text("Save config file") },
+                            onClick = {
+                                val configJson = Json.encodeToString(newConfig)
+                                val file = File(context.getExternalFilesDir(null)?.path ?: "", "keysync_config_${System.currentTimeMillis()}.json")
+                                file.writeText(configJson)
+                                Log.d("SettingsScreen", "Config exported to: ${file.absolutePath}")
+                                exportExpanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Load config file") },
+                            onClick = { importExpanded = false }
+                        )
                     }
                     DropdownMenu(expanded = importExpanded, onDismissRequest = { importExpanded = false }) {
-                        DropdownMenuItem(onClick = {
-                            val defaultFile = File(context.getExternalFilesDir(null)?.path ?: "", "keysync_config.json")
-                            if (defaultFile.exists()) {
-                                val json = defaultFile.readText(StandardCharsets.UTF_8)
-                                try {
-                                    val config = Json.decodeFromString(AppConfig.serializer(), json)
-                                    newConfig = newConfig.copy(
-                                        shootingModeKeyCode = config.shootingModeKeyCode,
-                                        fireKeyCode = config.fireKeyCode,
-                                        scopeKeyCode = config.scopeKeyCode,
-                                        buttonScale = config.buttonScale,
-                                        deleteDataOnRemove = config.deleteDataOnRemove,
-                                        themePreference = config.themePreference,
-                                        cancellableTouchMode = config.cancellableTouchMode,
-                                        normalBtnTouchMode = config.normalBtnTouchMode,
-                                        locale = config.locale
-                                    )
-                                    Log.d("SettingsScreen", "Config imported successfully")
-                                } catch (e: Exception) {
-                                    Log.e("SettingsScreen", "Failed to import config: ${e.message}")
+                        DropdownMenuItem(
+                            text = { Text("Load from file") },
+                            onClick = {
+                                val defaultFile = File(context.getExternalFilesDir(null)?.path ?: "", "keysync_config.json")
+                                if (defaultFile.exists()) {
+                                    val json = defaultFile.readText(StandardCharsets.UTF_8)
+                                    try {
+                                        val config = Json.decodeFromString(AppConfig.serializer(), json)
+                                        newConfig = newConfig.copy(
+                                            shootingModeKeyCode = config.shootingModeKeyCode,
+                                            fireKeyCode = config.fireKeyCode,
+                                            scopeKeyCode = config.scopeKeyCode,
+                                            buttonScale = config.buttonScale,
+                                            deleteDataOnRemove = config.deleteDataOnRemove,
+                                            themePreference = config.themePreference,
+                                            cancellableTouchMode = config.cancellableTouchMode,
+                                            normalBtnTouchMode = config.normalBtnTouchMode,
+                                            locale = config.locale
+                                        )
+                                        Log.d("SettingsScreen", "Config imported successfully")
+                                    } catch (e: Exception) {
+                                        Log.e("SettingsScreen", "Failed to import config: ${e.message}")
+                                    }
                                 }
+                                importExpanded = false
                             }
-                            importExpanded = false
-                        }) { Text("Load from file") }
+                        )
                     }
                 }
             }

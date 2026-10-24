@@ -48,13 +48,13 @@ import com.devoid.keysync.ui.AboutScreen
 import com.devoid.keysync.ui.MainScreen
 import com.devoid.keysync.ui.SettingsScreen
 import com.devoid.keysync.ui.theme.KeySyncTheme
+import com.devoid.keysync.util.LocaleManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuProvider
-import java.util.Locale
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -308,17 +308,8 @@ class MainActivity : ComponentActivity() {
     }
     
     private fun applyLocale() {
-        val localeString = getSharedPreferences("app_config", MODE_PRIVATE)
-            .getString("locale", "en") ?: "en"
-        val locale = Locale(localeString)
-        Locale.setDefault(locale)
-        val config = resources.configuration
-        config.setLocale(locale)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            createConfigurationContext(config)
-        } else {
-            resources.updateConfiguration(config, resources.displayMetrics)
-        }
+        val localeString = LocaleManager.getLocale(this)
+        LocaleManager.setLocale(this, localeString)
     }
 }
 

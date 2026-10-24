@@ -22,6 +22,7 @@ import com.devoid.keysync.model.AppConfig
 import com.devoid.keysync.model.DraggableItem
 import com.devoid.keysync.model.DraggableItemType
 import com.devoid.keysync.model.FullConfig
+import com.devoid.keysync.util.LocaleManager
 import kotlinx.serialization.json.Json
 import com.devoid.keysync.service.FloatingBubbleService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,7 +34,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
-import java.util.Locale
 import javax.inject.Inject
 
 
@@ -108,18 +108,8 @@ class MainActivityViewModel @Inject constructor(
         }
         if (localeChanged) {
             // Apply locale immediately
-            val locale = Locale(newLocale)
-            Locale.setDefault(locale)
-            val config = context.resources.configuration
-            config.setLocale(locale)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                context.createConfigurationContext(config)
-            } else {
-                context.resources.updateConfiguration(config, context.resources.displayMetrics)
-            }
-            // Save to SharedPreferences for MainActivity to read on startup
-            context.getSharedPreferences("app_config", Context.MODE_PRIVATE)
-                .edit().putString("locale", newLocale).apply()
+            LocaleManager.setLocale(context, newLocale)
+            LocaleManager.saveLocale(context, newLocale)
         }
         
         viewModelScope.launch {

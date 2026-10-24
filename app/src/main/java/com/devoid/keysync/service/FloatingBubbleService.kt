@@ -62,6 +62,7 @@ import com.devoid.keysync.ui.overlay.MenuItems
 import com.devoid.keysync.ui.overlay.ServiceLifecycleOwner
 import com.devoid.keysync.ui.overlay.SettingsLayout
 import com.devoid.keysync.ui.theme.KeySyncTheme
+import com.devoid.keysync.util.LocaleManager
 import dagger.Lazy
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope

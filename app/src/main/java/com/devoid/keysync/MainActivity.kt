@@ -185,7 +185,20 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate(route = MainScreen)
                             },
                             onExportConfig = { exportFilePicker.launch("keysync_config.json") },
-                            onImportConfig = { importFilePicker.launch(arrayOf("*/*")) })
+                            onImportConfig = { importFilePicker.launch(arrayOf("*/*")) },
+                            onLanguageChanged = { locale ->
+                                val newLocale = Locale(locale)
+                                Locale.setDefault(newLocale)
+                                val config = resources.configuration
+                                config.setLocale(newLocale)
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                    createConfigurationContext(config)
+                                } else {
+                                    resources.updateConfiguration(config, resources.displayMetrics)
+                                }
+                                finish()
+                                startActivity(intent)
+                            }}
                     }
                     composable<AboutScreen> {
                         AboutScreen(

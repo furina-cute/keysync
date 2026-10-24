@@ -464,6 +464,89 @@ fun SettingsScreen(
             }
         }
     }
+                // Import/Export Configuration
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    var exportExpanded by remember { mutableStateOf(false) }
+                    var importExpanded by remember { mutableStateOf(false) }
+                    Row(
+                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(
+                            Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                        ) {
+                            Text(
+                                stringResource(R.string.config_import_export),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1
+                            )
+                            Text(
+                                modifier = Modifier.padding(top = 8.dp),
+                                text = stringResource(R.string.config_import_export_description),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        OutlinedCard(onClick = { exportExpanded = true }) {
+                            Row(
+                                modifier = Modifier.padding(8.dp).widthIn(min = 60.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text("Export", style = MaterialTheme.typography.titleMedium)
+                                Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = null)
+                            }
+                        }
+                        OutlinedCard(onClick = { importExpanded = true }) {
+                            Row(
+                                modifier = Modifier.padding(8.dp).widthIn(min = 60.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text("Import", style = MaterialTheme.typography.titleMedium)
+                                Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = null)
+                            }
+                        }
+                    }
+                    DropdownMenu(expanded = exportExpanded, onDismissRequest = { exportExpanded = false }) {
+                        DropdownMenuItem(onClick = {
+                            val configJson = kotlinx.serialization.json.Json.encodeToString(newConfig)
+                            val file = java.io.File(getExternalFilesDir(null)?.path ?: "", "keysync_config_$\{System.currentTimeMillis()}.json")
+                            file.writeText(configJson)
+                            Log.d("SettingsScreen", "Config exported to: $\{file.absolutePath}")
+                            exportExpanded = false
+                        }) { Text("Save config file") }
+                        DropdownMenuItem(onClick = { importExpanded = false }) { Text("Load config file") }
+                    }
+                    DropdownMenu(expanded = importExpanded, onDismissRequest = { importExpanded = false }) {
+                        DropdownMenuItem(onClick = {
+                            val defaultFile = java.io.File(getExternalFilesDir(null)?.path ?: "", "keysync_config.json")
+                            if (defaultFile.exists()) {
+                                val json = defaultFile.readText(java.nio.charset.StandardCharsets.UTF_8)
+                                try {
+                                    val config = kotlinx.serialization.json.Json.decodeFromString(AppConfig.serializer(), json)
+                                    newConfig = newConfig.copy(
+                                        shootingModeKeyCode = config.shootingModeKeyCode,
+                                        fireKeyCode = config.fireKeyCode,
+                                        scopeKeyCode = config.scopeKeyCode,
+                                        buttonScale = config.buttonScale,
+                                        deleteDataOnRemove = config.deleteDataOnRemove,
+                                        themePreference = config.themePreference,
+                                        cancellableTouchMode = config.cancellableTouchMode,
+                                        normalBtnTouchMode = config.normalBtnTouchMode,
+                                        locale = config.locale
+                                    )
+                                    Log.d("SettingsScreen", "Config imported successfully")
+                                } catch (e: Exception) {
+                                    Log.e("SettingsScreen", "Failed to import config: $\{e.message}")
+                                }
+                            }
+                            importExpanded = false
+                        }) { Text("Load from file") }
+                    }
+                }
 }
 
 @Composable
@@ -501,118 +584,3 @@ fun KeyConfigTextField(
         }
     }
 }
-                // Import/Export Configuration
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    var exportExpanded by remember { mutableStateOf(false) }
-                    var importExpanded by remember { mutableStateOf(false) }
-                    Row(
-                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(
-                            Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                        ) {
-                            Text(
-                                stringResource(R.string.config_import_export),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.primary,
-                                maxLines = 1
-                            )
-                            Text(
-                                modifier = Modifier.padding(top = 8.dp),
-                                text = stringResource(R.string.config_import_export_description),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        OutlinedCard(onClick = { exportExpanded = true }) {
-                            Row(
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .widthIn(min = 60.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    "Export",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                                Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = null)
-                            }
-                        }
-                        OutlinedCard(onClick = { importExpanded = true }) {
-                            Row(
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .widthIn(min = 60.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    "Import",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                                Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = null)
-                            }
-                        }
-                    }
-                    // Export Menu
-                    DropdownMenu(
-                        expanded = exportExpanded,
-                        onDismissRequest = { exportExpanded = false }) {
-                        DropdownMenuItem(onClick = {
-                            // Export config to file
-                            val configJson = Json.encodeToString(newConfig)
-                            val file = File(
-                                externalFilesDir(null)?.path ?: "",
-                                "keysync_config_${System.currentTimeMillis()}.json"
-                            ).apply { writeText(configJson) }
-                            // Show file picked - simple approach: just log
-                            Log.d("SettingsScreen", "Config exported to: ${file.absolutePath}")
-                            exportExpanded = false
-                        }) {
-                            Text("Save config file")
-                        }
-                        DropdownMenuItem(onClick = {
-                            importExpanded = false
-                        }) {
-                            Text("Load config file")
-                        }
-                    }
-                    // Import Menu
-                    DropdownMenu(
-                        expanded = importExpanded,
-                        onDismissRequest = { importExpanded = false }) {
-                        DropdownMenuItem(onClick = {
-                            // Import config from file - simple approach
-                            val defaultFile = File(
-                                externalFilesDir(null)?.path ?: "",
-                                "keysync_config.json"
-                            )
-                            if (defaultFile.exists()) {
-                                val json = defaultFile.readText(StandardCharsets.UTF_8)
-                                try {
-                                    val config = Json.decodeFromString(AppConfig.serializer(), json)
-                                    newConfig = newConfig.copy(
-                                        shootingModeKeyCode = config.shootingModeKeyCode,
-                                        fireKeyCode = config.fireKeyCode,
-                                        scopeKeyCode = config.scopeKeyCode,
-                                        buttonScale = config.buttonScale,
-                                        deleteDataOnRemove = config.deleteDataOnRemove,
-                                        themePreference = config.themePreference,
-                                        cancellableTouchMode = config.cancellableTouchMode,
-                                        normalBtnTouchMode = config.normalBtnTouchMode,
-                                        locale = config.locale
-                                    )
-                                    Log.d("SettingsScreen", "Config imported successfully")
-                                } catch (e: Exception) {
-                                    Log.e("SettingsScreen", "Failed to import config: ${e.message}")
-                                }
-                            }
-                            importExpanded = false
-                        }) {
-                            Text("Load from file")
-                        }
-                    }
-                }

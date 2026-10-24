@@ -41,6 +41,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.devoid.keysync.MainActivityViewModel.UiState
+import com.devoid.keysync.model.AppConfig
 import com.devoid.keysync.model.ThemePreference
 import com.devoid.keysync.service.FloatingBubbleService
 import com.devoid.keysync.ui.AboutScreen

@@ -12,6 +12,10 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import kotlinx.serialization.json.Json
+import java.io.File
+import java.nio.charset.StandardCharsets
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
@@ -61,6 +65,34 @@ class MainActivity : ComponentActivity() {
     private val TAG = this::class.simpleName
     private val viewModel: MainActivityViewModel by viewModels()
     private val navigateTo = mutableStateOf<Any?>(null)
+    
+    // File picker for import/export
+    private val exportFilePicker = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        uri?.let {
+            try {
+                val configJson = Json.encodeToString(viewModel.appConfig.value)
+                contentResolver.openOutputStream(it)?.use { outputStream ->
+                    outputStream.write(configJson.toByteArray(StandardCharsets.UTF_8))
+                }
+                Toast.makeText(this, "Config exported successfully", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    private val importFilePicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let {
+            try {
+                val json = contentResolver.openInputStream(it)?.readBytes()?.toString(StandardCharsets.UTF_8) ?: return@let
+                val config = Json.decodeFromString(AppConfig.serializer(), json)
+                viewModel.saveKeyConfig(config)
+                Toast.makeText(this, "Config imported successfully", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         // Apply locale before super.onCreate to ensure correct locale for splash screen
         applyLocale()
@@ -143,7 +175,9 @@ class MainActivity : ComponentActivity() {
                                     Toast.LENGTH_SHORT
                                 ).show()
                                 navController.navigate(route = MainScreen)
-                            })
+                            },
+                            onExportConfig = { exportFilePicker.launch("keysync_config.json") },
+                            onImportConfig = { importFilePicker.launch() })
                     }
                     composable<AboutScreen> {
                         AboutScreen(

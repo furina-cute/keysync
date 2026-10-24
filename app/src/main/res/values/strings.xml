@@ -32,6 +32,8 @@
     <string name="about">About</string>
     <string name="language">Language</string>
     <string name="language_preference">Set application language</string>
+    <string name="export_config">导出配置</string>
+    <string name="import_config">导入配置</string>
 
     <!-- AboutScreen -->
     <string name="config_import_export">Import/Export Configuration</string>

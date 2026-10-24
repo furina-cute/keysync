@@ -17,6 +17,8 @@
     <string name="toggle_shooting_mode">切换射击模式:</string>
     <string name="config_import_export">导入/导出配置</string>
     <string name="config_import_export_description">以JSON格式导出或导入您的键位配置</string>
+    <string name="export_config">导出配置</string>
+    <string name="import_config">导入配置</string>
     <string name="fire">开火:</string>
     <string name="scope">镜头/瞄准:</string>
     <string name="button_size">按钮大小</string>

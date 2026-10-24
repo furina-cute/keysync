@@ -71,7 +71,8 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateAbout: () -> Unit = {},
     onExportConfig: () -> Unit = {},
-    onImportConfig: () -> Unit = {}
+    onImportConfig: () -> Unit = {},
+    onLanguageChanged: (String) -> Unit = {}
 ) {
     var newConfig by remember { mutableStateOf(appConfig) }
     Scaffold(
@@ -425,12 +426,12 @@ fun SettingsScreen(
                                         text = { Text(name) },
                                         onClick = {
                                             newConfig = newConfig.copy(locale = code)
+                                            onLanguageChanged(code)
                                             langDropDownExpanded = false
                                         })
                                 }
                             }
                         }
-
                     }
                 }
                 FilledTonalButton(modifier = Modifier.fillMaxWidth(), onClick = {
@@ -465,8 +466,7 @@ fun SettingsScreen(
                 }
                 // Import/Export Configuration
                 Card(modifier = Modifier.fillMaxWidth()) {
-                    var exportExpanded by remember { mutableStateOf(false) }
-                    var importExpanded by remember { mutableStateOf(false) }
+                    var dropdownExpanded by remember { mutableStateOf(false) }
                     Row(
                         modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -490,48 +490,34 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        OutlinedCard(onClick = { exportExpanded = true }) {
+                        OutlinedCard(onClick = { dropdownExpanded = true }) {
                             Row(
                                 modifier = Modifier
                                     .padding(8.dp)
-                                    .widthIn(min = 60.dp),
+                                    .widthIn(min = 80.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Text("Export", style = MaterialTheme.typography.titleMedium)
-                                Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = null)
-                            }
-                        }
-                        OutlinedCard(onClick = { importExpanded = true }) {
-                            Row(
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .widthIn(min = 60.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text("Import", style = MaterialTheme.typography.titleMedium)
+                                Text("Import/Export", style = MaterialTheme.typography.titleMedium)
                                 Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = null)
                             }
                         }
                     }
-                    DropdownMenu(expanded = exportExpanded, onDismissRequest = { exportExpanded = false }) {
+                    DropdownMenu(
+                        expanded = dropdownExpanded,
+                        onDismissRequest = { dropdownExpanded = false }
+                    ) {
                         DropdownMenuItem(
-                            text = { Text("Save config file") },
+                            text = { Text(stringResource(R.string.export_config)) },
                             onClick = {
                                 onExportConfig()
-                                exportExpanded = false
+                                dropdownExpanded = false
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Load config file") },
-                            onClick = { importExpanded = false }
-                        )
-                    }
-                    DropdownMenu(expanded = importExpanded, onDismissRequest = { importExpanded = false }) {
-                        DropdownMenuItem(
-                            text = { Text("Load from file") },
+                            text = { Text(stringResource(R.string.import_config)) },
                             onClick = {
                                 onImportConfig()
-                                importExpanded = false
+                                dropdownExpanded = false
                             }
                         )
                     }

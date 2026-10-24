@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 data class FullConfig(
     val appConfig: AppConfig,
     val addedPackages: List<String>,
-    val buttonsConfigs: Map<String, List<DraggableItem>>
+    val buttonsConfigs: Map<String, String>
 )

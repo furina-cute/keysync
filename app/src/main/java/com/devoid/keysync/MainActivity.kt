@@ -70,27 +70,34 @@ class MainActivity : ComponentActivity() {
     // File picker for import/export
     private val exportFilePicker = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri?.let {
-            try {
-                val configJson = Json.encodeToString(viewModel.appConfig.value)
-                contentResolver.openOutputStream(it)?.use { outputStream ->
-                    outputStream.write(configJson.toByteArray(StandardCharsets.UTF_8))
+            viewModel.viewModelScope.launch {
+                try {
+                    val configJson = viewModel.exportConfig()
+                    contentResolver.openOutputStream(it)?.use { outputStream ->
+                        outputStream.write(configJson.toByteArray(StandardCharsets.UTF_8))
+                    }
+                    Toast.makeText(this@MainActivity, "Config exported successfully", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(this@MainActivity, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
-                Toast.makeText(this, "Config exported successfully", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                Toast.makeText(this, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
     
     private val importFilePicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let {
-            try {
-                val json = contentResolver.openInputStream(it)?.readBytes()?.toString(StandardCharsets.UTF_8) ?: return@let
-                val config = Json.decodeFromString(AppConfig.serializer(), json)
-                viewModel.saveKeyConfig(config)
-                Toast.makeText(this, "Config imported successfully", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                Toast.makeText(this, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            viewModel.viewModelScope.launch {
+                try {
+                    val json = contentResolver.openInputStream(it)?.readBytes()?.toString(StandardCharsets.UTF_8) ?: return@launch
+                    val success = viewModel.importConfig(json)
+                    if (success) {
+                        Toast.makeText(this@MainActivity, "Config imported successfully", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this@MainActivity, "Import failed: Invalid format", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(this@MainActivity, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }

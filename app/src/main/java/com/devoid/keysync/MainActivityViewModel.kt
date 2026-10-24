@@ -21,6 +21,8 @@ import com.devoid.keysync.data.local.DataStoreManager
 import com.devoid.keysync.model.AppConfig
 import com.devoid.keysync.model.DraggableItem
 import com.devoid.keysync.model.DraggableItemType
+import com.devoid.keysync.model.FullConfig
+import kotlinx.serialization.json.Json
 import com.devoid.keysync.service.FloatingBubbleService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -123,6 +125,54 @@ class MainActivityViewModel @Inject constructor(
         viewModelScope.launch {
             dataStoreManager.save(DataStoreManager.KEYS_CONFIG, newAppConfig)
             _appConfig.value = newAppConfig
+        }
+    }
+
+    suspend fun exportConfig(): String {
+        val addedPackages = _addedPackages.value.map { it.packageName }
+        val buttonsConfigs = mutableMapOf<String, List<com.devoid.keysync.model.DraggableItem>>()
+        
+        // Get all button configs
+        getButtonsConfigKeys().first().forEach { key ->
+            val buttons = getButtons(key).first()
+            buttonsConfigs[key.name] = buttons
+        }
+        
+        val fullConfig = FullConfig(
+            appConfig = appConfig.value,
+            addedPackages = addedPackages,
+            buttonsConfigs = buttonsConfigs
+        )
+        
+        return Json.encodeToString(FullConfig.serializer(), fullConfig)
+    }
+    
+    suspend fun importConfig(json: String): Boolean {
+        return try {
+            val fullConfig = Json.decodeFromString(FullConfig.serializer(), json)
+            
+            // Save app config
+            saveKeyConfig(fullConfig.appConfig)
+            
+            // Clear existing packages
+            dataStoreManager.remove(androidx.datastore.preferences.core.stringPreferencesKey("added_packages"))
+            
+            // Add packages and their configs
+            fullConfig.addedPackages.forEach { packageName ->
+                dataStoreManager.saveList(
+                    androidx.datastore.preferences.core.stringPreferencesKey("added_packages"),
+                    listOf(packageName)
+                )
+                
+                val key = DataStoreManager.getButtonsConfigKey(packageName)
+                val buttons = fullConfig.buttonsConfigs[key.name] ?: emptyList()
+                dataStoreManager.save(key, buttons)
+            }
+            
+            true
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Import failed: ${e.message}")
+            false
         }
     }
 

@@ -129,13 +129,13 @@ class MainActivityViewModel @Inject constructor(
     }
 
     suspend fun exportConfig(): String {
-        val addedPackages = _addedPackages.value.map { it.packageName }
-        val buttonsConfigs = mutableMapOf<String, List<com.devoid.keysync.model.DraggableItem>>()
+        val addedPackages = _addedPackages.value
+        val buttonsConfigs = mutableMapOf<String, String>()
         
         // Get all button configs
-        getButtonsConfigKeys().first().forEach { key ->
-            val buttons = getButtons(key).first()
-            buttonsConfigs[key.name] = buttons
+        dataStoreManager.getButtonsConfigKeys().first().forEach { key ->
+            val buttons = dataStoreManager.getButtons(key).first()
+            buttonsConfigs[key.name] = Json.encodeToString(buttons)
         }
         
         val fullConfig = FullConfig(
@@ -155,23 +155,23 @@ class MainActivityViewModel @Inject constructor(
             saveKeyConfig(fullConfig.appConfig)
             
             // Clear existing packages
-            dataStoreManager.remove(androidx.datastore.preferences.core.stringPreferencesKey("added_packages"))
+            dataStoreManager.save(DataStoreManager.ADDED_PACKAGES, emptyList())
             
             // Add packages and their configs
             fullConfig.addedPackages.forEach { packageName ->
-                dataStoreManager.saveList(
-                    androidx.datastore.preferences.core.stringPreferencesKey("added_packages"),
-                    listOf(packageName)
-                )
+                dataStoreManager.saveList(DataStoreManager.ADDED_PACKAGES, fullConfig.addedPackages)
                 
                 val key = DataStoreManager.getButtonsConfigKey(packageName)
-                val buttons = fullConfig.buttonsConfigs[key.name] ?: emptyList()
-                dataStoreManager.save(key, buttons)
+                val buttonsJson = fullConfig.buttonsConfigs[key.name]
+                if (buttonsJson != null) {
+                    val buttons = Json.decodeFromString<List<DraggableItem>>(buttonsJson)
+                    dataStoreManager.save(key, buttons)
+                }
             }
             
             true
         } catch (e: Exception) {
-            android.util.Log.e(TAG, "Import failed: ${e.message}")
+            Log.e(TAG, "Import failed: ${e.message}")
             false
         }
     }

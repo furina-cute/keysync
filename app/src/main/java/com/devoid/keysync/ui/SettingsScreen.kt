@@ -513,9 +513,9 @@ fun SettingsScreen(
                     DropdownMenu(expanded = exportExpanded, onDismissRequest = { exportExpanded = false }) {
                         DropdownMenuItem(onClick = {
                             val configJson = kotlinx.serialization.json.Json.encodeToString(newConfig)
-                            val file = java.io.File(getExternalFilesDir(null)?.path ?: "", "keysync_config_$\{System.currentTimeMillis()}.json")
+                            val file = java.io.File(getExternalFilesDir(null)?.path ?: "", "keysync_config_${System.currentTimeMillis()}.json")
                             file.writeText(configJson)
-                            Log.d("SettingsScreen", "Config exported to: $\{file.absolutePath}")
+                            Log.d("SettingsScreen", "Config exported to: ${file.absolutePath}")
                             exportExpanded = false
                         }) { Text("Save config file") }
                         DropdownMenuItem(onClick = { importExpanded = false }) { Text("Load config file") }
@@ -540,7 +540,7 @@ fun SettingsScreen(
                                     )
                                     Log.d("SettingsScreen", "Config imported successfully")
                                 } catch (e: Exception) {
-                                    Log.e("SettingsScreen", "Failed to import config: $\{e.message}")
+                                    Log.e("SettingsScreen", "Failed to import config: ${e.message}")
                                 }
                             }
                             importExpanded = false

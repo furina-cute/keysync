@@ -34,6 +34,8 @@
     <string name="language_preference">Set application language</string>
 
     <!-- AboutScreen -->
+    <string name="config_import_export">Import/Export Configuration</string>
+    <string name="config_import_export_description">Export or import your key configuration as a JSON file</string>
     <string name="about_title">About</string>
     <string name="github">Github</string>
     <string name="reach_me">Reach Me</string>

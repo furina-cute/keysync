@@ -187,8 +187,8 @@ class MainActivity : ComponentActivity() {
                             onExportConfig = { exportFilePicker.launch("keysync_config.json") },
                             onImportConfig = { importFilePicker.launch(arrayOf("*/*")) },
                             onLanguageChanged = { language ->
-                                LocaleManager.saveLocale(this, language)
-                                LocaleManager.setLocale(this, language)
+                                LocaleManager.saveLocale(this@MainActivity, language)
+                                LocaleManager.setLocale(this@MainActivity, language)
                                 finish()
                                 startActivity(intent)
                             })

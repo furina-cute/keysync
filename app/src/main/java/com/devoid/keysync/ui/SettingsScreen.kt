@@ -71,8 +71,7 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateAbout: () -> Unit = {},
     onExportConfig: () -> Unit = {},
-    onImportConfig: () -> Unit = {},
-    onLanguageChanged: (String) -> Unit = {}
+    onImportConfig: () -> Unit = {}
 ) {
     var newConfig by remember { mutableStateOf(appConfig) }
     Scaffold(
@@ -400,6 +399,14 @@ fun SettingsScreen(
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            if (newConfig.locale != appConfig.locale) {
+                                Text(
+                                    modifier = Modifier.padding(top = 4.dp),
+                                    text = stringResource(R.string.language_change_hint),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                         OutlinedCard(onClick = { langDropDownExpanded = true }) {
                             Row(
@@ -426,7 +433,6 @@ fun SettingsScreen(
                                         text = { Text(name) },
                                         onClick = {
                                             newConfig = newConfig.copy(locale = code)
-                                            onLanguageChanged(code)
                                             langDropDownExpanded = false
                                         })
                                 }
@@ -497,7 +503,10 @@ fun SettingsScreen(
                                     .widthIn(min = 80.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Text("Import/Export", style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    stringResource(R.string.import_export),
+                                    style = MaterialTheme.typography.titleMedium
+                                )
                                 Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = null)
                             }
                         }

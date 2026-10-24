@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.IBinder
@@ -78,6 +79,12 @@ import kotlin.math.roundToInt
 @AndroidEntryPoint
 class FloatingBubbleService : Service() {
     private val TAG = "FloatingBubbleService"
+
+    /** Keep notification texts in the language selected in the app. */
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LocaleManager.applySavedLanguage(newBase))
+    }
+
     private lateinit var floatingBubbleLP: WindowManager.LayoutParams
 
     @Inject

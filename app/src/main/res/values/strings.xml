@@ -32,8 +32,22 @@
     <string name="about">About</string>
     <string name="language">Language</string>
     <string name="language_preference">Set application language</string>
-    <string name="export_config">导出配置</string>
-    <string name="import_config">导入配置</string>
+    <string name="export_config">Export Configuration</string>
+    <string name="import_config">Import Configuration</string>
+    <string name="import_export">Import/Export</string>
+
+    <!-- Messages -->
+    <string name="save_success">Saved successfully.</string>
+    <string name="export_success">Configuration exported.</string>
+    <string name="export_failed">Export failed: %1$s</string>
+    <string name="import_success">Configuration imported.</string>
+    <string name="import_failed">Import failed: %1$s</string>
+    <string name="import_invalid">Import failed: invalid configuration file.</string>
+    <string name="language_change_hint">Takes effect after saving</string>
+
+    <!-- Permissions / Snackbar -->
+    <string name="shizuku_not_running">Please start Shizuku service first.</string>
+    <string name="grant_permissions">Please grant permissions in Settings!</string>
 
     <!-- AboutScreen -->
     <string name="config_import_export">Import/Export Configuration</string>

@@ -76,28 +76,37 @@ class MainActivityViewModel @Inject constructor(
         getConnectedExternalDevices()
         viewModelScope.launch {
             _addedPackages.value = dataStoreManager.getList(DataStoreManager.ADDED_PACKAGES).first()
-            _appConfig.value = dataStoreManager.getKeyConfig(DataStoreManager.KEYS_CONFIG).first()
+            val config = dataStoreManager.getKeyConfig(DataStoreManager.KEYS_CONFIG).first()
+            // The locale preference is read very early (Application/Activity
+            // attachBaseContext), keep it in sync with the persisted config.
+            if (LocaleManager.getSavedLanguage(context) != config.locale) {
+                LocaleManager.saveLanguage(context, config.locale)
+            }
+            _appConfig.value = config
         }
     }
 
     fun saveKeyConfig(newAppConfig: AppConfig) {
+        // Snapshot the previous config: it is updated synchronously below, so the
+        // remapping coroutine must not read the (already changed) live value.
+        val oldConfig = appConfig.value
         val newFireKeyCode = newAppConfig.fireKeyCode
         val newShootingModeKeyCode = newAppConfig.shootingModeKeyCode
         val newLocale = newAppConfig.locale
-        
-        val localeChanged = newLocale != appConfig.value.locale
-        
-        if (newFireKeyCode != appConfig.value.fireKeyCode ||
-            newShootingModeKeyCode != appConfig.value.shootingModeKeyCode
+
+        val localeChanged = newLocale != oldConfig.locale
+
+        if (newFireKeyCode != oldConfig.fireKeyCode ||
+            newShootingModeKeyCode != oldConfig.shootingModeKeyCode
         ) {
             viewModelScope.launch {
                 dataStoreManager.getButtonsConfigKeys().first().forEach {
                     val buttonsConfig = dataStoreManager.getButtons(it).first().toMutableList()
                     buttonsConfig.forEachIndexed { index, value ->
                         if (value is DraggableItem.FixedKey) {
-                            if (value.keyCode == appConfig.value.fireKeyCode) {
+                            if (value.keyCode == oldConfig.fireKeyCode) {
                                 buttonsConfig[index] = value.copy(keyCode = newFireKeyCode)
-                            } else if (value.keyCode == appConfig.value.shootingModeKeyCode) {
+                            } else if (value.keyCode == oldConfig.shootingModeKeyCode) {
                                 buttonsConfig[index] = value.copy(keyCode = newShootingModeKeyCode)
                             }
                         }
@@ -107,14 +116,18 @@ class MainActivityViewModel @Inject constructor(
             }
         }
         if (localeChanged) {
-            // Apply locale immediately
-            LocaleManager.setLocale(context, newLocale)
-            LocaleManager.saveLocale(context, newLocale)
+            // Persist only. The Activity recreates itself afterwards and installs the
+            // language in attachBaseContext - mutating a Context's configuration here
+            // would not affect the already-created activity resources.
+            LocaleManager.saveLanguage(context, newLocale)
         }
-        
+
+        // Update the in-memory state synchronously so a following recreate() renders
+        // the new configuration right away.
+        _appConfig.value = newAppConfig
+
         viewModelScope.launch {
             dataStoreManager.save(DataStoreManager.KEYS_CONFIG, newAppConfig)
-            _appConfig.value = newAppConfig
         }
     }
 

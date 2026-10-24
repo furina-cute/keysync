@@ -36,6 +36,16 @@
     <string name="about">关于</string>
     <string name="language">语言</string>
     <string name="language_preference">设置应用语言</string>
+    <string name="language_change_hint">保存后生效</string>
+    <string name="import_export">导入/导出</string>
+    <string name="save_success">已保存。</string>
+    <string name="export_success">配置已导出。</string>
+    <string name="export_failed">导出失败：%1$s</string>
+    <string name="import_success">配置已导入。</string>
+    <string name="import_failed">导入失败：%1$s</string>
+    <string name="import_invalid">导入失败：配置文件无效。</string>
+    <string name="shizuku_not_running">请先启动 Shizuku 服务。</string>
+    <string name="grant_permissions">请在设置中授予权限！</string>
     
     <!-- AboutScreen -->
     <string name="about_title">关于</string>

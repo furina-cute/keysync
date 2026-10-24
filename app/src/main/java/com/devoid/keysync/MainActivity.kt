@@ -1,11 +1,9 @@
 package com.devoid.keysync
 
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.Configuration
-import android.content.res.Resources
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
@@ -76,9 +74,17 @@ class MainActivity : ComponentActivity() {
                     contentResolver.openOutputStream(it)?.use { outputStream ->
                         outputStream.write(configJson.toByteArray(StandardCharsets.UTF_8))
                     }
-                    Toast.makeText(this@MainActivity, "Config exported successfully", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@MainActivity,
+                        getString(R.string.export_success),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 } catch (e: Exception) {
-                    Toast.makeText(this@MainActivity, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@MainActivity,
+                        getString(R.string.export_failed, e.message ?: ""),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
@@ -89,21 +95,44 @@ class MainActivity : ComponentActivity() {
             viewModel.viewModelScope.launch {
                 try {
                     val json = contentResolver.openInputStream(it)?.readBytes()?.toString(StandardCharsets.UTF_8) ?: return@launch
+                    val languageBeforeImport = LocaleManager.getSavedLanguage(this@MainActivity)
                     val success = viewModel.importConfig(json)
                     if (success) {
-                        Toast.makeText(this@MainActivity, "Config imported successfully", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity,
+                            getString(R.string.import_success),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        if (LocaleManager.getSavedLanguage(this@MainActivity) != languageBeforeImport) {
+                            recreate()
+                        }
                     } else {
-                        Toast.makeText(this@MainActivity, "Import failed: Invalid format", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity,
+                            getString(R.string.import_invalid),
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 } catch (e: Exception) {
-                    Toast.makeText(this@MainActivity, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@MainActivity,
+                        getString(R.string.import_failed, e.message ?: ""),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
     }
+    /**
+     * Installs the persisted language into this activity's resources.
+     * This is what actually makes `stringResource` / `getString` return the selected
+     * language — [LocaleManager.wrap] only *returns* a localised context.
+     */
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LocaleManager.applySavedLanguage(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Apply locale before super.onCreate to ensure correct locale for splash screen
-        applyLocale()
         installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -175,23 +204,25 @@ class MainActivity : ComponentActivity() {
                             appConfig = viewModel.appConfig.value,
                             onNavigateBack = navController::popBackStack,
                             onNavigateAbout = { navController.navigate(route = AboutScreen) },
-                            onSave = {
-                                viewModel.saveKeyConfig(it)
+                            onSave = { newConfig ->
+                                val languageChanged = newConfig.locale !=
+                                        LocaleManager.getSavedLanguage(this@MainActivity)
+                                viewModel.saveKeyConfig(newConfig)
                                 Toast.makeText(
                                     this@MainActivity,
-                                    "Saved Successfully.",
+                                    getString(R.string.save_success),
                                     Toast.LENGTH_SHORT
                                 ).show()
-                                navController.navigate(route = MainScreen)
+                                if (languageChanged) {
+                                    // Recreating re-runs attachBaseContext, which installs
+                                    // the newly saved language for the whole window.
+                                    recreate()
+                                } else {
+                                    navController.navigate(route = MainScreen)
+                                }
                             },
                             onExportConfig = { exportFilePicker.launch("keysync_config.json") },
-                            onImportConfig = { importFilePicker.launch(arrayOf("*/*")) },
-                            onLanguageChanged = { language ->
-                                LocaleManager.saveLocale(this@MainActivity, language)
-                                LocaleManager.setLocale(this@MainActivity, language)
-                                finish()
-                                startActivity(intent)
-                            })
+                            onImportConfig = { importFilePicker.launch(arrayOf("*/*")) })
                     }
                     composable<AboutScreen> {
                         AboutScreen(
@@ -241,7 +272,7 @@ class MainActivity : ComponentActivity() {
         when (uiState) {
             UiState.ShizukuNotRunning -> {
                 scope.launch {
-                    snackbarHostState.showSnackbar("Please start Shizuku Service first.")
+                    snackbarHostState.showSnackbar(getString(R.string.shizuku_not_running))
                 }
                 return false
             }
@@ -251,8 +282,8 @@ class MainActivity : ComponentActivity() {
                     scope.launch {
                         val result = snackbarHostState
                             .showSnackbar(
-                                message = "Please grant permissions in settings!",
-                                actionLabel = "Settings",
+                                message = getString(R.string.grant_permissions),
+                                actionLabel = getString(R.string.settings),
                                 duration = SnackbarDuration.Short
                             )
                         if (result == SnackbarResult.ActionPerformed) {
@@ -273,8 +304,8 @@ class MainActivity : ComponentActivity() {
                     scope.launch {
                         val result = snackbarHostState
                             .showSnackbar(
-                                message = "Please grant permissions in settings!",
-                                actionLabel = "Settings",
+                                message = getString(R.string.grant_permissions),
+                                actionLabel = getString(R.string.settings),
                                 duration = SnackbarDuration.Short
                             )
                         when (result) {
@@ -298,11 +329,6 @@ class MainActivity : ComponentActivity() {
                 return true
             }
         }
-    }
-    
-    private fun applyLocale() {
-        val localeString = LocaleManager.getLocale(this)
-        LocaleManager.setLocale(this, localeString)
     }
 }
 

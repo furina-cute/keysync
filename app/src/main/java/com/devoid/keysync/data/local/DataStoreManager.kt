@@ -22,7 +22,16 @@ class DataStoreManager @Inject constructor(private val context: Context) {
             stringPreferencesKey("buttons_config_$packageName")
 
         val ADDED_PACKAGES = stringPreferencesKey("added_packages")
+
+        /** Pointer speed while *not* in shooting mode (out of game). */
         val POINTER_SENSITIVITY = floatPreferencesKey("pointer_sensitivity")
+
+        /** Pointer speed while shooting mode is enabled (in game). */
+        val SHOOTING_SENSITIVITY = floatPreferencesKey("shooting_sensitivity")
+
+        /** Where the cursor re-appears after leaving shooting mode: "last" or "center". */
+        val POINTER_EXIT_POSITION = stringPreferencesKey("pointer_exit_position")
+
         val OVERLAY_OPACITY = floatPreferencesKey("overlay_opacity")
         val KEYS_CONFIG = stringPreferencesKey("keys_config")
     }

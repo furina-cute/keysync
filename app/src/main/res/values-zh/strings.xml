@@ -56,14 +56,19 @@
     <!-- FloatingWindow/Overlay -->
     <string name="add_keymapping_for">添加按键映射:</string>
     <string name="key">按键</string>
-    <string name="compass">指南针</string>
+    <string name="wasd_group">移动盘（WASD）</string>
     <string name="shooting_mode">射击模式</string>
     <string name="fire_desc">开火</string>
-    <string name="bag_map">背包和地图</string>
+    <string name="ui_toggle">界面开关（开/关）</string>
+    <string name="ui_toggle_close_marker">关闭</string>
     <string name="scope_desc">瞄准镜</string>
     <string name="enter_shooting_mode">在 FPS 游戏中使用右键点击进入射击模式</string>
     <string name="fire_fps_games">在 FPS 游戏中使用左键点击开火</string>
-    <string name="pointer_sensitivity">指针灵敏度:</string>
+    <string name="normal_sensitivity">退出游戏模式灵敏度:</string>
+    <string name="shooting_sensitivity">进入游戏模式灵敏度:</string>
+    <string name="pointer_exit_position">退出游戏模式指针位置</string>
+    <string name="exit_position_last">记录进入前的位置</string>
+    <string name="exit_position_center">屏幕中心</string>
     <string name="overlay_opacity">叠加层不透明度:</string>
     <string name="advanced_settings">高级设置</string>
     <string name="close_overlay">关闭叠加层</string>

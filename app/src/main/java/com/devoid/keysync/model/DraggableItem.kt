@@ -2,6 +2,7 @@
 
 package com.devoid.keysync.model
 
+import android.view.KeyEvent
 import androidx.compose.ui.geometry.Offset
 import com.devoid.keysync.data.serializers.OffsetSerializer
 import kotlinx.serialization.SerialName
@@ -86,3 +87,10 @@ enum class DraggableItemType {
     //do not change positions of existing items
     KEY, WASD_KEY, SHOOTING_MODE, FIRE, BAG_MAP , SCOPE
 }
+
+/**
+ * Default key of a [DraggableItemType.BAG_MAP] (UI toggle) item.
+ * One key press opens the game UI at the primary position, the next press closes it
+ * at the cancel position.
+ */
+const val DEFAULT_UI_TOGGLE_KEYCODE = KeyEvent.KEYCODE_TAB

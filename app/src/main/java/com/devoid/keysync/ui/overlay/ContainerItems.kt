@@ -148,14 +148,29 @@ fun CancelKey(
     borderColor: Color = MaterialTheme.colorScheme.primary,
     onClick: () -> Unit
 ) {
-    IconKey(modifier = modifier, removable = false, onRemove = {}, onClick = onClick, borderColor = borderColor) {
-        Image(
+    Box {
+        IconKey(modifier = modifier, removable = false, onRemove = {}, onClick = onClick, borderColor = borderColor) {
+            Image(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp),
+                painter = painterResource(R.drawable.cancel),
+                contentDescription = stringResource(R.string.ui_toggle_close_marker),
+                colorFilter = ColorFilter.tint(borderColor)
+            )
+        }
+        // Make the second tap position of the UI toggle recognisable.
+        Text(
+            text = stringResource(R.string.ui_toggle_close_marker),
             modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp),
-            painter = painterResource(R.drawable.cancel),
-            contentDescription = stringResource(R.string.mouse_pointer),
-            colorFilter = ColorFilter.tint(borderColor)
+                .align(Alignment.TopCenter)
+                .background(
+                    MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                    CircleShape
+                )
+                .padding(horizontal = 4.dp),
+            style = MaterialTheme.typography.labelSmall,
+            color = borderColor
         )
     }
 }

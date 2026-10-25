@@ -32,6 +32,7 @@ import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -123,7 +124,8 @@ fun ItemsContainer(
     modifier: Modifier = Modifier,
     containerItems: List<DraggableItem>,
     appConfig: AppConfig = AppConfig.Default,
-    onRemove: (Int) -> Unit
+    onRemove: (Int) -> Unit,
+    onKeyAssigned: () -> Unit = {}
 ) {
     Box(
         modifier
@@ -171,6 +173,7 @@ fun ItemsContainer(
                                         return@onKeyEvent false
                                     item.keyCode = nativeKeyCode
                                     keyCode = nativeKeyCode
+                                    onKeyAssigned()
                                     true
                                 }
                                 .focusRequester(keyFocusRequester)
@@ -240,6 +243,7 @@ fun ItemsContainer(
                                         return@onKeyEvent false
                                     item.keyCode = nativeKeyCode
                                     keyCode = nativeKeyCode
+                                    onKeyAssigned()
                                     true
                                 }
                                 .onFocusChanged {
@@ -422,7 +426,7 @@ fun MenuItems(
                         )
                     }
                     Text(
-                        stringResource(R.string.compass),
+                        stringResource(R.string.wasd_group),
                         style = TextStyle(fontSize = 8.sp),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
@@ -492,12 +496,12 @@ fun MenuItems(
                                 .fillMaxSize()
                                 .padding(1.dp),
                             painter = painterResource(R.drawable.bag),
-                            contentDescription = stringResource(R.string.bag_map),
+                            contentDescription = stringResource(R.string.ui_toggle),
                             colorFilter = ColorFilter.tint(Color.Cyan)
                         )
                     }
                     Text(
-                        stringResource(R.string.bag_map),
+                        stringResource(R.string.ui_toggle),
                         style = TextStyle(fontSize = 8.sp),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
@@ -542,11 +546,15 @@ fun MenuItems(
 fun SettingsLayout(
     modifier: Modifier = Modifier,
     pointerSensitivity: Float = 0.5f,
+    shootingSensitivity: Float = 0.5f,
     overlayOpacity: Float = 0.5f,
+    pointerExitPosition: String = "last",
     onAdvancedSettingsClick: () -> Unit,
     onCloseOverlayClick: () -> Unit,
-    onPointerSensChange: (Float) -> Unit,
-    onOpacityChange: (Float) -> Unit
+    onPointerSensChange: (Float) -> Unit = {},
+    onShootingSensChange: (Float) -> Unit = {},
+    onExitPositionChange: (String) -> Unit = {},
+    onOpacityChange: (Float) -> Unit = {}
 ) {
     Column(
         modifier
@@ -556,7 +564,27 @@ fun SettingsLayout(
     ) {
         Row {
             Text(
-                text = stringResource(R.string.pointer_sensitivity),
+                text = stringResource(R.string.shooting_sensitivity),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f)
+            )
+            Text(
+                stringResource(R.string.button_scale_percent, (shootingSensitivity * 100).roundToInt()),
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .align(Alignment.CenterVertically),
+                style = TextStyle(color = MaterialTheme.colorScheme.tertiary)
+            )
+        }
+        Slider(
+            value = shootingSensitivity,
+            onValueChange = onShootingSensChange,
+            valueRange = 0.1f..1.0f,
+            steps = 8
+        )
+        Row {
+            Text(
+                text = stringResource(R.string.normal_sensitivity),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f)
             )
@@ -568,13 +596,37 @@ fun SettingsLayout(
                 style = TextStyle(color = MaterialTheme.colorScheme.tertiary)
             )
         }
-
         Slider(
             value = pointerSensitivity,
             onValueChange = onPointerSensChange,
             valueRange = 0.1f..1.0f,
             steps = 8
         )
+        Text(
+            text = stringResource(R.string.pointer_exit_position),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            RadioButton(
+                selected = pointerExitPosition == "last",
+                onClick = { onExitPositionChange("last") }
+            )
+            Text(
+                text = stringResource(R.string.exit_position_last),
+                style = MaterialTheme.typography.labelMedium
+            )
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            RadioButton(
+                selected = pointerExitPosition == "center",
+                onClick = { onExitPositionChange("center") }
+            )
+            Text(
+                text = stringResource(R.string.exit_position_center),
+                style = MaterialTheme.typography.labelMedium
+            )
+        }
         Row {
             Text(
                 text = stringResource(R.string.overlay_opacity),
@@ -638,6 +690,8 @@ private fun PreviewSettingsLayout() {
         ),
         onAdvancedSettingsClick = { },
         onPointerSensChange = { },
+        onShootingSensChange = { },
+        onExitPositionChange = { },
         onOpacityChange = { },
         onCloseOverlayClick = {}
     )

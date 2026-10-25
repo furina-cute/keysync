@@ -60,14 +60,19 @@
     <!-- Overlay -->
     <string name="add_keymapping_for">Add keymapping for:</string>
     <string name="key">Key</string>
-    <string name="compass">Compass</string>
+    <string name="wasd_group">Movement (WASD)</string>
     <string name="shooting_mode">Shooting Mode</string>
     <string name="fire_desc">Fire</string>
-    <string name="bag_map">Bag and Map</string>
+    <string name="ui_toggle">UI Toggle (Open/Close)</string>
+    <string name="ui_toggle_close_marker">Close</string>
     <string name="scope_desc">Scope</string>
     <string name="enter_shooting_mode">Enter Shooting Mode in FPS games Using Right Mouse Click</string>
     <string name="fire_fps_games">Fire In FPS Games Using Left Mouse Click</string>
-    <string name="pointer_sensitivity">Pointer Sensitivity: </string>
+    <string name="normal_sensitivity">Sensitivity (out of game): </string>
+    <string name="shooting_sensitivity">Sensitivity (in game): </string>
+    <string name="pointer_exit_position">Pointer position on exit</string>
+    <string name="exit_position_last">Last position</string>
+    <string name="exit_position_center">Screen center</string>
     <string name="overlay_opacity">Overlay Opacity: </string>
     <string name="advanced_settings">Advanced Settings</string>
     <string name="close_overlay">Close Overlay</string>

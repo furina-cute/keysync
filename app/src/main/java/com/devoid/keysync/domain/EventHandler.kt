@@ -7,6 +7,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.nativeKeyCode
 import com.devoid.keysync.model.AppConfig
+import com.devoid.keysync.model.DEFAULT_UI_TOGGLE_KEYCODE
 import com.devoid.keysync.model.DraggableItem
 import com.devoid.keysync.model.DraggableItemType
 import com.devoid.keysync.model.EventInjector
@@ -445,7 +446,11 @@ private const val MASK_A = 1 shl 21
 private const val MASK_S = 1 shl 22
 private const val MASK_D = 1 shl 23
 
-const val KEYCODE_CANCEL = 1 shl 4//cancel button for cancelable components
+// Cancel-position marker for cancelable (UI toggle) components.
+// It must live in its own bit range: "keyCode or KEYCODE_CANCEL" has to stay unique,
+// e.g. KEYCODE_TAB (61) already has bit 4 set and used to collide with its own
+// cancel position, so both tap positions pointed at the same spot.
+const val KEYCODE_CANCEL = 1 shl 24
 
 const val KEYCODE_WASD = 1 shl 5//custom keycode for key groups
 const val KEYCODE_LMC = 1 shl 6//mouse left click
@@ -498,6 +503,9 @@ class EventHandler(
 
     private var cancelableTouchHandler: MultiModeTouchHandler = MixedModeTouchHandler(eventInjector)
     private var normalTouchHandler: MultiModeTouchHandler = MixedModeTouchHandler(eventInjector)
+
+    /** Shooting mode was active when the game UI was opened with the UI toggle item. */
+    private var shootingWasActiveBeforeUiToggle = false
 
 
     private fun keyId(keyCode: Int): Int =
@@ -678,13 +686,27 @@ class EventHandler(
                 return
             }
             if (it.type == KeymapType.CANCELABLE) {
+                // UI toggle: first press opens the game UI, second press closes it.
+                // Always a single tap, never a hold, so the two positions alternate
+                // deterministically.
                 val id = keyId(keyCode)
-                cancelToggle[id] = if (cancelToggle[id]){
-                    keyMap[keyCode or KEYCODE_CANCEL]?.let {
-                        cancelableTouchHandler.handleTouchEvent(KeyEvent(KeyEvent.ACTION_DOWN, keyCode),cancelToggle[id],pointerId,it)
-                    }?:false
-                }else{
-                    cancelableTouchHandler.handleTouchEvent(KeyEvent(KeyEvent.ACTION_DOWN, keyCode),cancelToggle[id],pointerId,it)
+                val uiOpen = cancelToggle[id]
+                val map = if (uiOpen) keyMap[keyCode or KEYCODE_CANCEL] else it
+                if (map != null) {
+                    if (!uiOpen) {
+                        // Leave shooting mode so the cursor becomes visible and the
+                        // opened game UI can actually be used.
+                        suspendShootingModeForUiToggle()
+                    }
+                    val end = map.end ?: map.position
+                    eventInjector.injectPointer(pointerId, map.position, end)
+                    eventInjector.releasePointer(pointerId)
+                    cancelToggle[id] = !uiOpen
+                    if (uiOpen) {
+                        // Closing the UI: give control back to the game if shooting
+                        // mode was active before the UI was opened.
+                        resumeShootingModeAfterUiToggle()
+                    }
                 }
             } else {
                 val id = keyId(keyCode)
@@ -703,13 +725,8 @@ class EventHandler(
         val id = keyId(keyCode)
         keyMap[keyCode]?.let {
             if (it.type == KeymapType.CANCELABLE){
-                cancelToggle[id] = if (cancelToggle[id]){
-                    keyMap[keyCode or KEYCODE_CANCEL]?.let {
-                        cancelableTouchHandler.handleTouchEvent(KeyEvent(KeyEvent.ACTION_UP, keyCode),cancelToggle[id],pointerId,it)
-                    }?:false
-                }else{
-                    cancelableTouchHandler.handleTouchEvent(KeyEvent(KeyEvent.ACTION_UP, keyCode),cancelToggle[id],pointerId,it)
-                }
+                // The tap was already performed on key down; a UI toggle must not run
+                // a second action when the key is released.
                 return
             }
             pressed[id] =  normalTouchHandler.handleTouchEvent(
@@ -719,6 +736,24 @@ class EventHandler(
                 it
             )
         } ?: eventInjector.releasePointer(pointerId)
+    }
+
+    /* ---------- UI toggle (open/close game UI) ---------- */
+
+    private fun suspendShootingModeForUiToggle() {
+        if (shootingMode) {
+            shootingWasActiveBeforeUiToggle = true
+            toggleShootingMode()
+        }
+    }
+
+    private fun resumeShootingModeAfterUiToggle() {
+        if (shootingWasActiveBeforeUiToggle) {
+            shootingWasActiveBeforeUiToggle = false
+            if (!shootingMode) {
+                toggleShootingMode()
+            }
+        }
     }
 
     /* ---------- mouse ---------- */
@@ -886,7 +921,9 @@ class EventHandler(
                 }
 
                 is DraggableItem.CancelableKey -> {
-                    val k = item.keyCode ?: return@forEach
+                    // Items saved by older versions may have no key code yet. Falling back
+                    // to the default keeps the UI toggle usable instead of silently dead.
+                    val k = item.keyCode ?: DEFAULT_UI_TOGGLE_KEYCODE
                     var position =
                         item.position
                     var cancelPosition =
@@ -927,6 +964,7 @@ class EventHandler(
         wasdMask = 0
         lastWasdMask = 0
         shootingMode = false
+        shootingWasActiveBeforeUiToggle = false
         keyIdMap.clear()
         nextKeyId = 0
         pointerIds.fill(-1)

@@ -307,7 +307,9 @@ fun MainScreen(
                             modifier = Modifier
                                 .clip(CircleShape)
                                 .clickable {
-                                    viewModel.removePackages(selectedPackages.keys)
+                                    // Pass a snapshot: the selection is cleared right after
+                                    // and removePackages() runs asynchronously.
+                                    viewModel.removePackages(selectedPackages.keys.toList())
                                     selectedPackages.clear()
                                 }
                                 .padding(4.dp),

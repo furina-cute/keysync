@@ -122,56 +122,66 @@ class MainActivityViewModel @Inject constructor(
             LocaleManager.saveLanguage(context, newLocale)
         }
 
+        // Turning the cleanup switch on immediately removes mappings of apps that were
+        // removed while the switch was off.
+        val enableCleanup = newAppConfig.deleteDataOnRemove && !oldConfig.deleteDataOnRemove
+
         // Update the in-memory state synchronously so a following recreate() renders
         // the new configuration right away.
         _appConfig.value = newAppConfig
 
         viewModelScope.launch {
             dataStoreManager.save(DataStoreManager.KEYS_CONFIG, newAppConfig)
+            if (enableCleanup) {
+                pruneRemovedAppConfigs()
+            }
         }
     }
 
     suspend fun exportConfig(): String {
         val addedPackages = _addedPackages.value
         val buttonsConfigs = mutableMapOf<String, String>()
-        
-        // Get all button configs
-        dataStoreManager.getButtonsConfigKeys().first().forEach { key ->
+
+        // Only export key mappings of apps that are still in the list. Exporting every
+        // buttons_config_* key also exported mappings of already removed apps.
+        addedPackages.forEach { packageName ->
+            val key = DataStoreManager.getButtonsConfigKey(packageName)
             val buttons = dataStoreManager.getButtons(key).first()
-            buttonsConfigs[key.name] = Json.encodeToString(buttons)
+            if (buttons.isNotEmpty()) {
+                buttonsConfigs[key.name] = Json.encodeToString(buttons)
+            }
         }
-        
+
         val fullConfig = FullConfig(
             appConfig = appConfig.value,
             addedPackages = addedPackages,
             buttonsConfigs = buttonsConfigs
         )
-        
+
         return Json.encodeToString(FullConfig.serializer(), fullConfig)
     }
     
     suspend fun importConfig(json: String): Boolean {
         return try {
             val fullConfig = Json.decodeFromString(FullConfig.serializer(), json)
-            
-            // Save app config
-            saveKeyConfig(fullConfig.appConfig)
-            
-            // Clear existing packages
-            dataStoreManager.save(DataStoreManager.ADDED_PACKAGES, emptyList())
-            
-            // Add packages and their configs
+
+            // Persist the imported config directly. saveKeyConfig() also remaps old key
+            // codes and prunes removed apps, which must not run while importing.
+            _appConfig.value = fullConfig.appConfig
+            dataStoreManager.save(DataStoreManager.KEYS_CONFIG, fullConfig.appConfig)
+            LocaleManager.saveLanguage(context, fullConfig.appConfig.locale)
+
+            _addedPackages.value = fullConfig.addedPackages
+            dataStoreManager.saveList(DataStoreManager.ADDED_PACKAGES, fullConfig.addedPackages)
+
             fullConfig.addedPackages.forEach { packageName ->
-                dataStoreManager.saveList(DataStoreManager.ADDED_PACKAGES, fullConfig.addedPackages)
-                
                 val key = DataStoreManager.getButtonsConfigKey(packageName)
-                val buttonsJson = fullConfig.buttonsConfigs[key.name]
-                if (buttonsJson != null) {
+                fullConfig.buttonsConfigs[key.name]?.let { buttonsJson ->
                     val buttons = Json.decodeFromString<List<DraggableItem>>(buttonsJson)
                     dataStoreManager.save(key, buttons)
                 }
             }
-            
+
             true
         } catch (e: Exception) {
             Log.e(TAG, "Import failed: ${e.message}")
@@ -180,18 +190,38 @@ class MainActivityViewModel @Inject constructor(
     }
 
     fun removePackages(packages: Collection<Int>) {
+        // Snapshot the selection: callers usually clear their selection right after this
+        // call, and the coroutine below suspends while deleting app configs.
+        val selectedIndices = packages.toSet()
         viewModelScope.launch {
-            _addedPackages.value = _addedPackages.value.filterIndexed { index, packageName ->
-                if (index !in packages) {
-                    true
-                } else {
-                    if (appConfig.value.deleteDataOnRemove) {
-                        dataStoreManager.remove(DataStoreManager.getButtonsConfigKey(packageName))
-                    }
-                    false
-                }
-            }
+            val removedPackages = _addedPackages.value
+                .filterIndexed { index, _ -> index in selectedIndices }
+
+            _addedPackages.value = _addedPackages.value
+                .filterIndexed { index, _ -> index !in selectedIndices }
             dataStoreManager.saveList(DataStoreManager.ADDED_PACKAGES, _addedPackages.value)
+
+            if (appConfig.value.deleteDataOnRemove) {
+                removedPackages.forEach {
+                    dataStoreManager.remove(DataStoreManager.getButtonsConfigKey(it))
+                }
+                pruneRemovedAppConfigs()
+            }
+        }
+    }
+
+    /**
+     * Deletes every stored key mapping whose package is no longer in [addedPackages].
+     * This also cleans up mappings left behind by earlier versions.
+     */
+    private suspend fun pruneRemovedAppConfigs() {
+        val keep = _addedPackages.value
+            .map { DataStoreManager.getButtonsConfigKey(it).name }
+            .toSet()
+        dataStoreManager.getButtonsConfigKeys().first().forEach { key ->
+            if (key.name !in keep) {
+                dataStoreManager.remove(key)
+            }
         }
     }
 

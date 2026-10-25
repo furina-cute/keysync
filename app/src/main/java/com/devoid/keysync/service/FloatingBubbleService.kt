@@ -146,10 +146,10 @@ class FloatingBubbleService : Service() {
         val itemsContainerLP = WindowManager.LayoutParams()
         itemsContainerLP.copyFrom(floatingBubbleLP)
 
-        containerView =
-            getItemsContainerView { id ->
-                stateManager.get().removeItem(id)
-            }
+        containerView = getItemsContainerView(
+            onRemove = { id -> stateManager.get().removeItem(id) },
+            onKeyAssigned = { stateManager.get().refreshKeyMapping() }
+        )
 
         floatingBubbleView = getFloatingBubbleView(
             onCLick = {
@@ -216,7 +216,8 @@ class FloatingBubbleService : Service() {
 
     @SuppressLint("ClickableViewAccessibility")
     private fun getItemsContainerView(
-        onRemove: (Int) -> Unit
+        onRemove: (Int) -> Unit,
+        onKeyAssigned: () -> Unit
     ): ComposeView {
         val composeView = ComposeView(this)
         composeView.layoutParams = FrameLayout.LayoutParams(
@@ -253,6 +254,7 @@ class FloatingBubbleService : Service() {
                         appConfig = keysConfig,
                         containerItems = draggableItems,
                         onRemove = onRemove,
+                        onKeyAssigned = onKeyAssigned,
                     )
                 }
             }
@@ -426,12 +428,18 @@ class FloatingBubbleService : Service() {
                             width = Dimension.preferredWrapContent
                         }) {
                     val pointerSensitivity by stateManager.get().pointerSensitivity.collectAsState()
+                    val shootingSensitivity by stateManager.get().shootingSensitivity.collectAsState()
                     val overlayOpacity by stateManager.get().overlayOpacity.collectAsState()
+                    val pointerExitPosition by stateManager.get().pointerExitPosition.collectAsState()
                     SettingsLayout(
                         pointerSensitivity = pointerSensitivity,
+                        shootingSensitivity = shootingSensitivity,
                         overlayOpacity = overlayOpacity,
+                        pointerExitPosition = pointerExitPosition,
                         onOpacityChange = { stateManager.get().overlayOpacity.value = it },
                         onPointerSensChange = { stateManager.get().pointerSensitivity.value = it },
+                        onShootingSensChange = { stateManager.get().shootingSensitivity.value = it },
+                        onExitPositionChange = { stateManager.get().pointerExitPosition.value = it },
                         onAdvancedSettingsClick = {
                             val intent = Intent(baseContext, MainActivity::class.java).apply {
                                 flags =

@@ -12,6 +12,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.datastore.preferences.core.Preferences
 import com.devoid.keysync.data.local.DataStoreManager
 import com.devoid.keysync.model.AppConfig
+import com.devoid.keysync.model.DEFAULT_UI_TOGGLE_KEYCODE
 import com.devoid.keysync.model.DraggableItem
 import com.devoid.keysync.model.DraggableItemType
 import com.devoid.keysync.domain.EventHandler
@@ -40,16 +41,34 @@ class FloatingWindowStateManager @Inject constructor(
     val windowManager: WindowManager by lazy { context.getSystemService(WindowManager::class.java) }
     private val displayMetrics = context.resources.displayMetrics
 
+    /** Pointer speed while shooting mode is disabled (normal mouse control). */
     val pointerSensitivity = MutableStateFlow(0.5f)
+
+    /** Pointer speed while shooting mode is enabled (in game camera control). */
+    val shootingSensitivity = MutableStateFlow(0.5f)
+
     val overlayOpacity = MutableStateFlow(0.5f)
+
+    /** Where the cursor re-appears after leaving shooting mode. */
+    val pointerExitPosition = MutableStateFlow(EXIT_POSITION_LAST)
+
+    companion object {
+        const val EXIT_POSITION_LAST = "last"
+        const val EXIT_POSITION_CENTER = "center"
+    }
 
     private var buttonConfigKey :Preferences.Key<String>? = null
 
     private val _appConfig =MutableStateFlow(AppConfig.Default)
     val keysConfig = _appConfig.asStateFlow()
 
+    /** Multiplier applied to raw mouse deltas out of game. */
     val sensitivity: Float
         get() = 10f * pointerSensitivity.value // at max 10x the original offset
+
+    /** Multiplier applied to raw mouse deltas in game (shooting mode). */
+    val shootingSensitivityFactor: Float
+        get() = 10f * shootingSensitivity.value
 
     private val _isBubbleExpanded = MutableStateFlow(false)
     val isBubbleExpanded = _isBubbleExpanded.asStateFlow()
@@ -71,9 +90,20 @@ class FloatingWindowStateManager @Inject constructor(
                 buttonConfigKey?.let {
                     dataStoreManager.save(DataStoreManager.OVERLAY_OPACITY,overlayOpacity.value)
                     dataStoreManager.save(DataStoreManager.POINTER_SENSITIVITY,pointerSensitivity.value)
+                    dataStoreManager.save(DataStoreManager.SHOOTING_SENSITIVITY,shootingSensitivity.value)
+                    dataStoreManager.save(DataStoreManager.POINTER_EXIT_POSITION,pointerExitPosition.value)
                     dataStoreManager.save(it,containerItems.value)
                 }
                 _appConfig.value = dataStoreManager.getKeyConfig(DataStoreManager.KEYS_CONFIG).first()
+            }
+        }
+        scope.launch {
+            var wasShooting = isShootingMode.value
+            isShootingMode.collect { shooting ->
+                if (wasShooting && !shooting) {
+                    restorePointerAfterShootingMode()
+                }
+                wasShooting = shooting
             }
         }
         scope.launch {
@@ -88,13 +118,28 @@ class FloatingWindowStateManager @Inject constructor(
     fun loadButtonsConfig(packageName:String){
         buttonConfigKey= DataStoreManager.getButtonsConfigKey(packageName)
         scope.launch {
-            _containerItems.value=dataStoreManager.getButtons(buttonConfigKey!!).first()
+            _containerItems.value = dataStoreManager.getButtons(buttonConfigKey!!).first()
+                .map { item ->
+                    // Older builds stored both tap positions of the UI toggle on top of
+                    // each other, which made the second position impossible to find.
+                    if (item is DraggableItem.CancelableKey && item.cancelPosition == item.position) {
+                        item.cancelPosition = item.position + Offset(0f, 120f)
+                    }
+                    item
+                }
             eventHandler.updateKeyMapping(containerItems.value)
             dataStoreManager.getFloat(DataStoreManager.OVERLAY_OPACITY).first()?.let {
                 overlayOpacity.value = it
             }
-            dataStoreManager.getFloat(DataStoreManager.POINTER_SENSITIVITY).first()?.let {
-                pointerSensitivity.value = it
+            val savedNormalSensitivity =
+                dataStoreManager.getFloat(DataStoreManager.POINTER_SENSITIVITY).first()
+            val savedShootingSensitivity =
+                dataStoreManager.getFloat(DataStoreManager.SHOOTING_SENSITIVITY).first()
+            savedNormalSensitivity?.let { pointerSensitivity.value = it }
+            // Older versions only had one sensitivity value: reuse it for shooting mode.
+            shootingSensitivity.value = savedShootingSensitivity ?: pointerSensitivity.value
+            dataStoreManager.getString(DataStoreManager.POINTER_EXIT_POSITION).first()?.let {
+                pointerExitPosition.value = it
             }
         }
     }
@@ -135,9 +180,14 @@ class FloatingWindowStateManager @Inject constructor(
                 DraggableItem.CancelableKey(
                     itemID,
                     offset,
-                    cancelPosition = offset,
+                    // The second position must not overlap the first one, otherwise the
+                    // user cannot tell where the "close" tap goes.
+                    cancelPosition = offset + Offset(0f, 120f),
                     size = 0,
-                    type = itemType
+                    type = itemType,
+                    // Without a key code the item was silently skipped when the key map
+                    // was built, so the whole "UI toggle" did nothing.
+                    keyCode = DEFAULT_UI_TOGGLE_KEYCODE
                 )}
             DraggableItemType.SCOPE->{
                 DraggableItem.FixedKey(
@@ -184,10 +234,12 @@ class FloatingWindowStateManager @Inject constructor(
             }
 
             MotionEvent.ACTION_MOVE -> {
+                val factor = if (isShootingMode.value)
+                    shootingSensitivityFactor else sensitivity
                 val offset = Offset(
                     motionEvent.rawX,
                     motionEvent.rawY
-                ) * sensitivity
+                ) * factor
                 if (!isShootingMode.value) {
                     val position = _mousePointerOffset.value + offset
                     _mousePointerOffset.value = Offset(
@@ -204,6 +256,25 @@ class FloatingWindowStateManager @Inject constructor(
 
     fun clearActivePointers() {
         eventHandler.clear()
+    }
+
+    /** Rebuilds the key map, e.g. after the user assigned a new key in the overlay. */
+    fun refreshKeyMapping() {
+        eventHandler.updateKeyMapping(containerItems.value)
+    }
+
+    /**
+     * Moves the cursor to the configured position once shooting mode is left.
+     * "last" keeps the position the cursor had before entering shooting mode, because
+     * mouse movement is swallowed while shooting mode is active.
+     */
+    private fun restorePointerAfterShootingMode() {
+        if (pointerExitPosition.value == EXIT_POSITION_CENTER) {
+            _mousePointerOffset.value = Offset(
+                displayMetrics.widthPixels / 2f,
+                displayMetrics.heightPixels / 2f
+            )
+        }
     }
 
     fun onDestroy(){
